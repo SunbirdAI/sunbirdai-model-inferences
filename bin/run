@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+set -e
+
+docker run --rm -p 8088:8088 sunbirddocker/sunbirdai-model-inferences:v1

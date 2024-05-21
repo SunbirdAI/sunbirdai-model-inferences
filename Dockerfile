@@ -25,5 +25,6 @@ RUN python3.11 -m pip install --upgrade pip && \
 
 # Add src files (Worker Template)
 ADD src .
+ADD test_input.json .
 
 CMD python3.11 -u /handler.py
