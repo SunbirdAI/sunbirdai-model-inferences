@@ -6,3 +6,19 @@
 # To learn more, see https://pip.pypa.io/en/stable/reference/requirements-file-format/
 
 runpod==1.6.2
+transformers
+kenlm
+bitsandbytes
+accelerate
+sentencepiece
+sacremoses
+wandb
+torch
+requests
+pyctcdecode
+python-dotenv
+pandas
+google-cloud-storage
+jiwer
+librosa
+Werkzeug

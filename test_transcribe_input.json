@@ -1,0 +1,8 @@
+{
+    "input": {
+        "task": "transcribe",
+        "target_lang": "ach",
+        "adapter": "ach",
+        "audio_file": "./content/Acholi 0.mp3"
+    }
+}

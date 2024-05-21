@@ -2,15 +2,18 @@
 # DockerHub -> https://hub.docker.com/r/runpod/base/tags
 FROM runpod/base:0.4.0-cuda11.8.0
 
+ENV RUNPOD_ENDPOINT_ID=yapuzewu3ebmzq
+ENV AUDIO_CONTENT_BUCKET_NAME=sb-api-audio-content-sb-gcp-project-01
+
 # The base image comes with many system dependencies pre-installed to help you get started quickly.
 # Please refer to the base image's Dockerfile for more information before adding additional dependencies.
 # IMPORTANT: The base image overrides the default huggingface cache location.
 
 
 # --- Optional: System dependencies ---
-# COPY builder/setup.sh /setup.sh
-# RUN /bin/bash /setup.sh && \
-#     rm /setup.sh
+COPY builder/setup.sh /setup.sh
+RUN /bin/bash /setup.sh && \
+    rm /setup.sh
 
 
 # Python dependencies
@@ -25,5 +28,7 @@ RUN python3.11 -m pip install --upgrade pip && \
 
 # Add src files (Worker Template)
 ADD src .
+ADD content ./content
+ADD test_input.json .
 
 CMD python3.11 -u /handler.py

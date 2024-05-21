@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+set -e
+
+docker push sunbirddocker/sunbirdai-model-inferences:v1.2
