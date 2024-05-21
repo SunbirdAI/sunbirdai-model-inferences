@@ -1,18 +1,8 @@
 {
     "input": {
-        "tasks": [
-            {
-                "task": "translate",
-                "source_language": "lug",
-                "target_language": "eng",
-                "text": "Osiibye otya nno?"
-            },
-            {
-                "task": "transcribe",
-                "target_lang": "ach",
-                "adapter": "ach",
-                "audio_file": "./content/Acholi 0.mp3"
-            }
-        ]
+        "task": "transcribe",
+        "target_lang": "eng",
+        "adapter": "eng",
+        "audio_file": "./content/shecenter_trailer.mp3"
     }
 }

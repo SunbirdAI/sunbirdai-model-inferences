@@ -19,7 +19,7 @@ from transcribe_utils import (
     setup_pipeline,
     transcribe_audio,
 )
-from translate_utils import make_response, translate
+from translate_utils import translate
 
 load_dotenv()
 
@@ -44,38 +44,33 @@ def transcribe_main(target_lang, audio_file):
 def handler(job):
     """Handler function that will be used to process jobs."""
     job_input = job["input"]
-    tasks = job_input.get("tasks")
+    task = job_input.get("task")
+    response = {}
 
-    for task in tasks:
-        if task.get("task") == "translate":
-            source_language = task.get("source_language")
-            target_language = task.get("target_language")
-            text_to_translate = task.get("text")
+    if task == "translate":
+        source_language = job_input.get("source_language")
+        target_language = job_input.get("target_language")
+        text_to_translate = job_input.get("text")
 
-            translated_text = translate(
-                text_to_translate, source_language, target_language
+        translated_text = translate(text_to_translate, source_language, target_language)
+
+        response = {"text": text_to_translate, "translated_text": translated_text}
+    elif task == "transcribe":
+        try:
+            target_lang = job_input.get("target_lang", "lug")
+            audio_file = get_audio_file(job_input.get("audio_file"))
+
+            start_time = time.time()
+
+            transcription = transcribe_main(target_lang, audio_file)
+            response = {"audio_transcription": transcription.get("text")}
+            end_time = time.time()
+            execution_time = end_time - start_time
+            print(
+                f"Audio transcription execution time: {execution_time:.4f} seconds / {execution_time / 60:.4f} minutes"
             )
-
-            response = {"text": text_to_translate, "translated_text": translated_text}
-            response["translate"] = make_response(response=response)
-        elif task.get("task") == "transcribe":
-            try:
-                target_lang = task.get("target_lang", "lug")
-                audio_file = get_audio_file(task.get("audio_file"))
-
-                start_time = time.time()
-
-                transcription = transcribe_main(target_lang, audio_file)
-                response["transcribe"] = {
-                    "audio_transcription": transcription.get("text")
-                }
-                end_time = time.time()
-                execution_time = end_time - start_time
-                print(
-                    f"Audio transcription execution time: {execution_time:.4f} seconds / {execution_time / 60:.4f} minutes"
-                )
-            except Exception as e:
-                response["transcribe"] = {"Error": str(e)}
+        except Exception as e:
+            response = {"Error": str(e)}
 
     return response
 

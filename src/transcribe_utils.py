@@ -19,7 +19,13 @@ from transformers import (
 load_dotenv()
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-lang_config = {"ach": "Sunbird/sunbird-mms", "lug": "Sunbird/sunbird-mms"}
+lang_config = {
+    "ach": "Sunbird/sunbird-mms",
+    "lug": "Sunbird/sunbird-mms",
+    "lgg": "Sunbird/sunbird-mms",
+    "teo": "Sunbird/sunbird-mms",
+    "nyn": "Sunbird/sunbird-mms",
+}
 
 
 def setup_model(model_id: str, language: str):
