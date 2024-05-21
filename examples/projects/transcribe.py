@@ -20,6 +20,7 @@ files = {
     ),
 }
 data = {
+    "task": "transcribe",
     "language": "lug",
     "adapter": "lug",
 }
