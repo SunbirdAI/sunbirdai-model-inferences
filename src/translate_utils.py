@@ -1,6 +1,5 @@
-import transformers
 import torch
-
+import transformers
 
 tokenizer = transformers.NllbTokenizer.from_pretrained(
     "facebook/nllb-200-distilled-1.3B"
