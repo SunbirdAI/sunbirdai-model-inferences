@@ -58,7 +58,6 @@ class AITasks:
             "audio": (file_name, open(audio_path, "rb"), "audio/mpeg"),
         }
         data = {
-            "task": "transcribe",
             "language": language,
             "adapter": language,
         }
@@ -92,7 +91,6 @@ class AITasks:
             "Content-Type": "application/json",
         }
         data = {
-            "task": "translate",
             "source_language": source_language,
             "target_language": target_language,
             "text": text,

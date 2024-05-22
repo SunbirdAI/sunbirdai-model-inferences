@@ -14,7 +14,6 @@ headers = {
 }
 
 data = {
-    "task": "translate",
     "source_language": "ach",
     "target_language": "eng",
     "text": "nyia florence leonat ga aul tok toa laik maidota aweno i latin ginie ni i torido apin nao e ni i ic fomi wek ando atekiŋ ova latinneni in yugoan fenicdic ginene ni ci dok cito kwano aloko kwede mamol pien kit n aloko ki minne kwede wariwane minne paka nio en ditti en aye i cecemuel mumito acak fidiŋ en bene core doŋ ocito yaco i coke ana cud faid pode wer ni timoo wodok eskul pien ana i kanoticer ni a witimo gini kuman in doŋ tuel wid yu wot anebritiŋ ci noŋo e onipati ka pwony noŋo atye ka neko gaŋ aye",
