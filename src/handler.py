@@ -19,6 +19,7 @@ logging.basicConfig(level=logging.INFO)
 # You will want models to be loaded into memory before starting serverless.
 from language_id_utils import model as language_id_model
 from language_id_utils import tokenizer as language_id_tokenizer
+from summarization_utils import summarize_text
 from transcribe_utils import (
     get_audio_file,
     setup_decoder,
@@ -96,6 +97,17 @@ def auto_detect_language_task(job_input):
     return {"language": result}
 
 
+def summarization_task(job_input):
+    text = job_input.get("text")
+
+    if not text:
+        raise ValueError("Missing text for summarization")
+
+    summary = summarize_text(text)
+
+    return {"summarized_text": summary}
+
+
 def handler(job):
     """Handler function that processes jobs."""
     job_input = job.get("input")
@@ -113,6 +125,8 @@ def handler(job):
             return transcribe_task(job_input)
         elif task == "auto_detect_language":
             return auto_detect_language_task(job_input)
+        elif task == "summarise":
+            return summarization_task(job_input)
         else:
             return {"Error": f"Unknown task: {task}"}
     except Exception as e:
