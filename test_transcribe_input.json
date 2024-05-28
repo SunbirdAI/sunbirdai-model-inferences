@@ -1,8 +1,8 @@
 {
     "input": {
         "task": "transcribe",
-        "target_lang": "ach",
-        "adapter": "ach",
-        "audio_file": "./content/Acholi 0.mp3"
+        "target_lang": "eng",
+        "adapter": "eng",
+        "audio_file": "./content/shecenter_trailer.mp3"
     }
 }
