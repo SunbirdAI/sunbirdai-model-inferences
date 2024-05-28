@@ -1,4 +1,5 @@
 import logging
+
 import torch
 from transformers import TextStreamer
 from unsloth import FastLanguageModel
@@ -25,7 +26,7 @@ def summarize_text(input_text):
         max_seq_length = 2048  # Define the maximum sequence length
         dtype = None  # Auto-detect the appropriate data type
         load_in_4bit = True  # Enable 4-bit quantization for memory optimization
-    
+
         # Load the pre-trained model and tokenizer
         model, tokenizer = FastLanguageModel.from_pretrained(
             model_name="akera/sunflower-llama3-finetuned-20240424",
@@ -33,10 +34,10 @@ def summarize_text(input_text):
             dtype=dtype,
             load_in_4bit=load_in_4bit,
         )
-    
+
         # Define the instruction for the model
         instruction = "Anonymised summary"
-    
+
         # Format the prompt
         instruction_prompt = """{}
     
@@ -45,7 +46,7 @@ def summarize_text(input_text):
         
         ### Output
         """
-    
+
         # Tokenize the input text
         inputs = tokenizer(
             [
@@ -56,22 +57,22 @@ def summarize_text(input_text):
             ],
             return_tensors="pt",
         ).to(device)
-    
+
         # Initialize the text streamer
         text_streamer = TextStreamer(tokenizer)
-    
+
         # Generate the summary using the model
         result = model.generate(
             **inputs, streamer=text_streamer, max_new_tokens=150, repetition_penalty=1.1
         )
-    
+
         # Decode the generated tokens to get the output text
         output_text = tokenizer.decode(result[0], skip_special_tokens=True)
-    
+
         # Extract the part of the text after '### Output'
         if "### Output" in output_text:
             output_text = output_text.split("### Output")[-1].strip()
-    except  Exception as e:
+    except Exception as e:
         logging.info(str(e))
         output_text = str(e)
 

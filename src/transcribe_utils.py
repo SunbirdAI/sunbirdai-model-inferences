@@ -25,6 +25,7 @@ lang_config = {
     "lgg": "Sunbird/sunbird-mms",
     "teo": "Sunbird/sunbird-mms",
     "nyn": "Sunbird/sunbird-mms",
+    "eng": "Sunbird/sunbird-mms",
 }
 
 
@@ -82,6 +83,14 @@ def setup_decoder(language: str, tokenizer, feature_extractor):
             filename=lm_file_name,
             subfolder=lm_file_subfolder,
         )
+    elif language == "eng":
+        lm_file_name = "eng_3gram.bin"
+        lm_file_subfolder = "language_model"
+        lm_file = hf_hub_download(
+            repo_id=lang_config[language],
+            filename=lm_file_name,
+            subfolder=lm_file_subfolder,
+        )
     processor = Wav2Vec2Processor(
         feature_extractor=feature_extractor, tokenizer=tokenizer
     )
@@ -89,7 +98,7 @@ def setup_decoder(language: str, tokenizer, feature_extractor):
     sorted_vocab_dict = {
         k.lower(): v for k, v in sorted(vocab_dict.items(), key=lambda item: item[1])
     }
-    if language in ["ach", "lug", "lgg", "nyn", "teo"]:
+    if language in ["ach", "lug", "lgg", "nyn", "teo", "eng"]:
         decoder = build_ctcdecoder(
             labels=list(sorted_vocab_dict.keys()), kenlm_model_path=lm_file
         )
@@ -113,7 +122,7 @@ def setup_pipeline(model, language, tokenizer, feature_extractor, processor, dec
     Returns:
         pipe: ASR pipeline.
     """
-    if language in ["ach", "lug", "lgg", "nyn", "teo"]:
+    if language in ["ach", "lug", "lgg", "nyn", "teo", "eng"]:
         processor_with_lm = Wav2Vec2ProcessorWithLM(
             feature_extractor=feature_extractor,
             tokenizer=tokenizer,
@@ -209,7 +218,9 @@ if __name__ == "__main__":
     language = "ach"
     model, tokenizer, processor, feature_extractor = setup_model(model_id, language)
     decoder = setup_decoder(language, tokenizer, feature_extractor)
-    pipe = setup_pipeline(model, tokenizer, feature_extractor, processor, decoder)
+    pipe = setup_pipeline(
+        model, language, tokenizer, feature_extractor, processor, decoder
+    )
 
     audio_files = [
         "./content/MEGA 12.2.mp3",
