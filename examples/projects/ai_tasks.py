@@ -25,7 +25,8 @@ sess.mount("https://", HTTPAdapter(max_retries=retries))
 
 class AITasks:
     """
-    A class for performing AI tasks such as transcription and translation using a REST API.
+    A class for performing AI tasks such as transcription, translation and anonymised
+    summarisation using a REST API.
 
     Parameters:
         base_url (str): The base URL of the API.
@@ -97,7 +98,30 @@ class AITasks:
         }
 
         response = sess.post(url, headers=headers, json=data)
-        return response.json()["output"]["data"]["translated_text"]
+        return response.json()["output"]["translated_text"]
+
+    def summarise(self, endpoint, text):
+        """
+        Anonymously summarises the given text. The supported languages are
+        English and Luganda for now.
+
+        Parameters:
+            endpoint (str): The endpoint to be concatenated to the base URL.
+            text (str): The text to be summarised.
+
+        Returns:
+            str: The summarised text.
+        """
+        url = f"{self.base_url}/{endpoint}"
+        headers = {
+            "accept": "application/json",
+            "Authorization": f"Bearer {self.auth_token}",
+            "Content-Type": "application/json",
+        }
+        data = {"text": text}
+
+        response = sess.post(url, headers=headers, json=data)
+        return response.json()["summarized_text"]
 
 
 # Example Usage
@@ -133,3 +157,24 @@ if __name__ == "__main__":
         text=text,
     )
     print(f"Translation: {translation}")
+
+    text = (
+        "ndowooza yange ku baana bano abato abatalina tufuna funa ya uganda butuufu "
+        "eserbamby omwana oyo bingi bye yeegomba okuva mu buto bwe ate by'atasobola "
+        "kwetuusaako bw'afuna mu naawumuwaamagezi nti ekya mazima nze kaboyiaadeyaatei "
+        "ebintu kati bisusse mu uganda wano ebyegombebw'omwana by'atasobola kwetuusaako "
+        "ng'ate abazadde nabo bambi bwe beetunulamubamufuna mpola tebasobola kulabirira "
+        "mwana oyo bintu by'ayagala ekivaamu omwana akemererwan'ayagala omulenzi omulenzi "
+        "naye n'atoba okuatejukira ba mbi ba tannategeera bigambo bya kufuna famire fulani "
+        "bakola kyagenda layivu n'afuna embuto eky'amazima nze mbadde nsaba be kikwata "
+        "govenment sembera embeera etuyisa nnyo abaana ne tubafaako embeera gwe nyiga gwa "
+        "omuzadde olina olabirira maama we olina olabirira n'abato kati kano akasuumuseemu "
+        "bwe ka kubulako ne keegulirayooba kapalaobakakioba tokyabisobola ne keyiiyabatuyambe "
+        "buduufuembeera bagikyusa mu tulemye"
+    )
+
+    summary = ai_tasks.summarise(
+        endpoint="summarise",
+        text=text,
+    )
+    print(f"Summarisation: {summary}")

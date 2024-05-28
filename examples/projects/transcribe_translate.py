@@ -45,6 +45,14 @@ def process_directory(directory, output_file, base_url, auth_token):
                 endpoint="stt", audio_path=os.path.join(root, file), language=language
             )
 
+            transcription_summarisation = ""
+            if language == "lug":
+                logger.info(f"Summarising transcription text of audio file: {file}")
+                transcription_summarisation = ai_tasks.summarise(
+                    endpoint="summarise",
+                    text=transcription,
+                )
+
             if transcription is not None:
                 # Translate transcription to English
                 logger.info(f"Translating transcription of audio file: {file}")
@@ -54,6 +62,14 @@ def process_directory(directory, output_file, base_url, auth_token):
                     target_language="eng",
                     text=transcription,
                 )
+
+                # Summarising translation text
+                logger.info(f"Summarising translation text")
+                translation_summarisation = ai_tasks.summarise(
+                    endpoint="summarise",
+                    text=translation,
+                )
+
                 # Add results to DataFrame
                 df = df._append(
                     pd.DataFrame.from_dict(
@@ -61,7 +77,11 @@ def process_directory(directory, output_file, base_url, auth_token):
                             "filename": [file],
                             "language": [language],
                             "transcription": [transcription],
+                            "transcription_summarisation": [
+                                transcription_summarisation
+                            ],
                             "translation": [translation],
+                            "translation_summarisation": [translation_summarisation],
                         }
                     ),
                     ignore_index=True,
