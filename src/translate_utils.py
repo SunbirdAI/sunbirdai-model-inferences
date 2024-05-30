@@ -5,7 +5,7 @@ tokenizer = transformers.NllbTokenizer.from_pretrained(
     "facebook/nllb-200-distilled-1.3B"
 )
 model = transformers.M2M100ForConditionalGeneration.from_pretrained(
-    "jq/nllb-1.3B-many-to-many-step-2k"
+    "jq/nllb-1.3B-many-to-many-pronouncorrection-charaug"
 )
 
 
