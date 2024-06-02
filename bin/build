@@ -2,4 +2,4 @@
 
 set -e
 
-docker build --platform linux/amd64 --tag sunbirddocker/sunbirdai-model-inferences:v1.5 .
+docker build --platform linux/amd64 --tag sunbirddocker/sunbirdai-model-inferences:v1.6 .
