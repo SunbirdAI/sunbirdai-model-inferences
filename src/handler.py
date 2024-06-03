@@ -17,6 +17,7 @@ logging.basicConfig(level=logging.INFO)
 
 # If your handler runs inference on a model, load the model here.
 # You will want models to be loaded into memory before starting serverless.
+from asr_summarization_utils import translate as asr_summarise
 from language_id_utils import model as language_id_model
 from language_id_utils import tokenizer as language_id_tokenizer
 from summarization_utils import summarize_text
@@ -83,6 +84,26 @@ def transcribe_task(job_input):
     return {"audio_transcription": transcription.get("text")}
 
 
+def asr_summarise_task(job_input):
+    source_language = job_input.get("source_language")
+    target_language = job_input.get("target_language")
+    text = job_input.get("text")
+
+    if not (source_language and target_language and text):
+        raise ValueError("Missing required translation parameters")
+
+    corrected_text = asr_summarise(text, source_language, source_language)
+    summary = asr_summarise("<summary> " + text, source_language, target_language)
+    short_summary = asr_summarise(
+        "<shortsummary> " + text, source_language, target_language
+    )
+    return {
+        "corrected_text": corrected_text,
+        "summary": summary,
+        "short_summary": short_summary,
+    }
+
+
 def auto_detect_language_task(job_input):
     text = job_input.get("text")
 
@@ -123,6 +144,8 @@ def handler(job):
             return translate_task(job_input)
         elif task == "transcribe":
             return transcribe_task(job_input)
+        elif task == "asr_summarise":
+            return asr_summarise_task(job_input)
         elif task == "auto_detect_language":
             return auto_detect_language_task(job_input)
         elif task == "summarise":
