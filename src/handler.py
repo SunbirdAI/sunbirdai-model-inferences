@@ -125,7 +125,7 @@ def language_classification_task(job_input):
     if not text:
         raise ValueError("Missing text for language classification")
 
-    result = classify_predict(text)
+    result = classify_predict(text, device)
 
     return {"predictions": result}
 
@@ -161,7 +161,7 @@ def handler(job):
         elif task == "auto_detect_language":
             return auto_detect_language_task(job_input)
         elif task =="language_classify":
-            return language_classification_task
+            return language_classification_task(job_input)
         elif task == "summarise":
             return summarization_task(job_input)
         else:
