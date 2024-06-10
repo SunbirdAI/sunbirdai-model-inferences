@@ -15,10 +15,10 @@ classification_model = AutoModelForSequenceClassification.from_pretrained(
     "yigagilbert/salt_language_Classification"
 )
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
-def predict(text):
+def predict(text, device):
     """
     Perform inference on the input text and return the probabilities for each label.
 
@@ -43,6 +43,8 @@ def predict(text):
           and properly set up in the global scope.
         - The `torch` library is required for tensor operations.
     """
+    classification_model.to(device)
+
     inputs = classification_tokenizer(
         text, return_tensors="pt", truncation=True, padding=True
     )
@@ -50,7 +52,7 @@ def predict(text):
     with torch.no_grad():
         outputs = classification_model(**inputs)
     logits = outputs.logits
-    probabilities = torch.nn.functional.softmax(logits, dim=-1).cpu().numpy()[0]
+    probabilities = torch.nn.functional.softmax(logits, dim=-1)[0]
 
     # Map labels to their respective probabilities
     label_mapping = {0: "eng", 1: "lug", 2: "ach", 3: "teo", 4: "lgg", 5: "nyn"}

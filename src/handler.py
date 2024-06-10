@@ -125,7 +125,7 @@ def language_classification_task(job_input):
     if not text:
         raise ValueError("Missing text for language classification")
 
-    result = classify_predict(text)
+    result = classify_predict(text, device)
 
     return {"predictions": result}
 
