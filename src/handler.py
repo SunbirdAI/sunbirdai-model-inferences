@@ -19,8 +19,8 @@ logging.basicConfig(level=logging.INFO)
 # You will want models to be loaded into memory before starting serverless.
 from asr_summarization_utils import translate as asr_summarise
 from language_id_utils import model as language_id_model
-from language_id_utils import tokenizer as language_id_tokenizer
 from language_id_utils import predict as classify_predict
+from language_id_utils import tokenizer as language_id_tokenizer
 from summarization_utils import summarize_text
 from transcribe_utils import (
     get_audio_file,
@@ -160,7 +160,7 @@ def handler(job):
             return asr_summarise_task(job_input)
         elif task == "auto_detect_language":
             return auto_detect_language_task(job_input)
-        elif task =="language_classify":
+        elif task == "language_classify":
             return language_classification_task(job_input)
         elif task == "summarise":
             return summarization_task(job_input)
