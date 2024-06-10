@@ -28,18 +28,19 @@ def predict(text, device):
 
     Args:
         text (str): The input text to perform inference on.
+        device (torch.device): The device (CPU or GPU) to run the model on.
 
     Returns:
         dict: A dictionary where keys are the labels ("eng", "lug", "ach", "teo", "lgg", "nyn")
               and values are the corresponding probabilities as floats.
 
     Example:
-        >>> result = predict("example text")
+        >>> result = predict("example text", device)
         >>> print(result)
         {'eng': 0.2, 'lug': 0.1, 'ach': 0.4, 'teo': 0.1, 'lgg': 0.15, 'nyn': 0.05}
 
     Note:
-        - This function assumes that the `tokenizer`, `model`, and `device` are already defined
+        - This function assumes that the `tokenizer` and `model` are already defined
           and properly set up in the global scope.
         - The `torch` library is required for tensor operations.
     """
