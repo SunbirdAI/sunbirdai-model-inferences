@@ -17,6 +17,7 @@ logging.basicConfig(level=logging.INFO)
 
 # If your handler runs inference on a model, load the model here.
 # You will want models to be loaded into memory before starting serverless.
+from asr_summarization_utils import process_and_correct_text
 from asr_summarization_utils import translate as asr_summarise
 from language_id_utils import model as language_id_model
 from language_id_utils import predict as classify_predict
@@ -78,11 +79,18 @@ def transcribe_task(job_input):
     end_time = time.time()
     execution_time = end_time - start_time
 
+    transcription_text = transcription.get("text")
+
+    if target_lang in ["eng", "lug"]:
+        transcription_text = process_and_correct_text(
+            transcription_text, chunk_size=50, source_language=target_lang
+        )
+
     logging.info(
         f"Audio transcription execution time: {execution_time:.4f} seconds / {execution_time / 60:.4f} minutes"
     )
 
-    return {"audio_transcription": transcription.get("text")}
+    return {"audio_transcription": transcription_text}
 
 
 def asr_summarise_task(job_input):
@@ -93,7 +101,9 @@ def asr_summarise_task(job_input):
     if not (source_language and target_language and text):
         raise ValueError("Missing required translation parameters")
 
-    corrected_text = asr_summarise(text, source_language, source_language)
+    corrected_text = process_and_correct_text(
+        text, chunk_size=50, source_language=source_language
+    )
     summary = asr_summarise("<summary> " + text, source_language, target_language)
     short_summary = asr_summarise(
         "<shortsummary> " + text, source_language, target_language

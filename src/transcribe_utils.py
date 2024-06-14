@@ -135,8 +135,9 @@ def setup_pipeline(model, language, tokenizer, feature_extractor, processor, dec
             feature_extractor=processor_with_lm.feature_extractor,
             decoder=processor_with_lm.decoder,
             device=device,
-            chunk_length_s=5,
-            stride_length_s=(1, 2),
+            chunk_length_s=10,
+            stride_length_s=(4, 2),
+            return_timestamps="word",
         )
     else:
         pipe = AutomaticSpeechRecognitionPipeline(
@@ -145,8 +146,9 @@ def setup_pipeline(model, language, tokenizer, feature_extractor, processor, dec
             feature_extractor=processor.feature_extractor,
             decoder=decoder,
             device=device,
-            chunk_length_s=5,
-            stride_length_s=(1, 2),
+            chunk_length_s=10,
+            stride_length_s=(4, 2),
+            return_timestamps="word",
         )
 
     return pipe
