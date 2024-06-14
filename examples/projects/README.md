@@ -16,13 +16,13 @@ Before using the pipeline script, ensure you have the following:
 1. Clone this repository to your local machine:
 
 ```sh
-git clone https://github.com/SunbirdAI/sunbird-nllb-translate-inference-server.git
+git clone https://github.com/SunbirdAI/sunbirdai-model-inferences.git
 ```
 
 2. Navigate to the cloned repository:
 
 ```sh
-cd sunbird-nllb-translate-inference-server
+cd sunbirdai-model-inferences
 ```
 
 3. Install the required Python libraries:
@@ -32,6 +32,8 @@ Make sure you are in the root directory of the repository
 ```sh
 pip install -r requirements-dev.txt
 pip install -r builder/requirements.txt
+pip install -r requirements.txt
+ffdl install --add-path -y
 ```
 
 ## Usage
