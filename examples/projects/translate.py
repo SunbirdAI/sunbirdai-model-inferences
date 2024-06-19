@@ -91,7 +91,7 @@ if __name__ == "__main__":
     )
     translated_text = translate(text, source_language, target_language)
     print(translated_text)
-    print("="*100)
+    print("=" * 100)
 
     file_path = "transcript.txt"
     content = read_text_from_file(file_path)
@@ -103,7 +103,7 @@ if __name__ == "__main__":
 
     write_text_to_file(translated_text, file_output)
     logging.info(f"Translated to file {file_output}")
-    print("="*100)
+    print("=" * 100)
 
     source_language = "eng"
     target_language = "lug"

@@ -27,3 +27,6 @@ xformers
 trl
 peft
 Werkzeug
+pyannote.audio
+onnxruntime
+numpy==1.26.4

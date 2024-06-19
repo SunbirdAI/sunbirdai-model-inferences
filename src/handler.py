@@ -19,6 +19,7 @@ logging.basicConfig(level=logging.INFO)
 # You will want models to be loaded into memory before starting serverless.
 from asr_summarization_utils import process_and_correct_text
 from asr_summarization_utils import translate as asr_summarise
+from diarization_utils import format_diarization_output, process_audio_diarization
 from language_id_utils import model as language_id_model
 from language_id_utils import predict as classify_predict
 from language_id_utils import tokenizer as language_id_tokenizer
@@ -68,8 +69,10 @@ def translate_task(job_input):
 
 
 def transcribe_task(job_input):
+    response = {}
     target_lang = job_input.get("target_lang", "lug")
     audio_file_path = job_input.get("audio_file")
+    recognise_speakers = job_input.get("recognise_speakers", False)
 
     if not audio_file_path:
         raise ValueError("Missing audio file for transcription")
@@ -88,11 +91,22 @@ def transcribe_task(job_input):
             transcription_text, chunk_size=50, source_language=target_lang
         )
 
+    response["audio_transcription"] = transcription_text
+
+    if recognise_speakers:
+        hf_token = os.getenv("HF_TOKEN")
+        diarization_output = process_audio_diarization(
+            audio_file, hf_token, transcription, device
+        )
+        formatted_diarization_output = format_diarization_output(diarization_output)
+        response["diarization_output"] = diarization_output
+        response["formatted_diarization_output"] = formatted_diarization_output
+
     logging.info(
         f"Audio transcription execution time: {execution_time:.4f} seconds / {execution_time / 60:.4f} minutes"
     )
 
-    return {"audio_transcription": transcription_text}
+    return response
 
 
 def asr_summarise_task(job_input):
