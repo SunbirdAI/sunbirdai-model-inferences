@@ -1,8 +1,9 @@
 {
     "input": {
-        "task": "translate",
-        "source_language": "lug",
-        "target_language": "eng",
-        "text": "Okugulu kwange kwamenyese."
+        "task": "transcribe",
+        "target_lang": "eng",
+        "adapter": "eng",
+        "audio_file": "./content/backup_sliced.mp3",
+        "recognise_speakers": true
     }
 }

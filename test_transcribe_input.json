@@ -3,6 +3,7 @@
         "task": "transcribe",
         "target_lang": "eng",
         "adapter": "eng",
-        "audio_file": "./content/shecenter_trailer.mp3"
+        "audio_file": "./content/shecenter_trailer.mp3",
+        "recognise_speakers": true
     }
 }

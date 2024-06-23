@@ -17,7 +17,9 @@ logging.basicConfig(level=logging.INFO)
 
 # If your handler runs inference on a model, load the model here.
 # You will want models to be loaded into memory before starting serverless.
+from asr_summarization_utils import process_and_correct_text
 from asr_summarization_utils import translate as asr_summarise
+from diarization_utils import format_diarization_output, process_audio_diarization
 from language_id_utils import model as language_id_model
 from language_id_utils import predict as classify_predict
 from language_id_utils import tokenizer as language_id_tokenizer
@@ -29,7 +31,7 @@ from transcribe_utils import (
     setup_pipeline,
     transcribe_audio,
 )
-from translate_utils import translate
+from translate_utils import process_and_translate_text
 
 load_dotenv()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -60,13 +62,17 @@ def translate_task(job_input):
     if not (source_language and target_language and text_to_translate):
         raise ValueError("Missing required translation parameters")
 
-    translated_text = translate(text_to_translate, source_language, target_language)
+    translated_text = process_and_translate_text(
+        text_to_translate, source_language, target_language
+    )
     return {"text": text_to_translate, "translated_text": translated_text}
 
 
 def transcribe_task(job_input):
+    response = {}
     target_lang = job_input.get("target_lang", "lug")
     audio_file_path = job_input.get("audio_file")
+    recognise_speakers = job_input.get("recognise_speakers", False)
 
     if not audio_file_path:
         raise ValueError("Missing audio file for transcription")
@@ -78,11 +84,29 @@ def transcribe_task(job_input):
     end_time = time.time()
     execution_time = end_time - start_time
 
+    transcription_text = transcription.get("text")
+
+    if target_lang in ["eng", "lug"]:
+        transcription_text = process_and_correct_text(
+            transcription_text, chunk_size=50, source_language=target_lang
+        )
+
+    response["audio_transcription"] = transcription_text
+
+    if recognise_speakers:
+        hf_token = os.getenv("HF_TOKEN")
+        diarization_output = process_audio_diarization(
+            audio_file, hf_token, transcription, device
+        )
+        formatted_diarization_output = format_diarization_output(diarization_output)
+        response["diarization_output"] = diarization_output
+        response["formatted_diarization_output"] = formatted_diarization_output
+
     logging.info(
         f"Audio transcription execution time: {execution_time:.4f} seconds / {execution_time / 60:.4f} minutes"
     )
 
-    return {"audio_transcription": transcription.get("text")}
+    return response
 
 
 def asr_summarise_task(job_input):
@@ -93,7 +117,9 @@ def asr_summarise_task(job_input):
     if not (source_language and target_language and text):
         raise ValueError("Missing required translation parameters")
 
-    corrected_text = asr_summarise(text, source_language, source_language)
+    corrected_text = process_and_correct_text(
+        text, chunk_size=50, source_language=source_language
+    )
     summary = asr_summarise("<summary> " + text, source_language, target_language)
     short_summary = asr_summarise(
         "<shortsummary> " + text, source_language, target_language
@@ -151,21 +177,20 @@ def handler(job):
     if not task:
         return {"Error": "Task is missing from job input"}
 
+    task_map = {
+        "translate": translate_task,
+        "transcribe": transcribe_task,
+        "asr_summarise": asr_summarise_task,
+        "auto_detect_language": auto_detect_language_task,
+        "language_classify": language_classification_task,
+        "summarise": summarization_task,
+    }
+
+    if task not in task_map:
+        return {"Error": f"Unknown task: {task}"}
+
     try:
-        if task == "translate":
-            return translate_task(job_input)
-        elif task == "transcribe":
-            return transcribe_task(job_input)
-        elif task == "asr_summarise":
-            return asr_summarise_task(job_input)
-        elif task == "auto_detect_language":
-            return auto_detect_language_task(job_input)
-        elif task == "language_classify":
-            return language_classification_task(job_input)
-        elif task == "summarise":
-            return summarization_task(job_input)
-        else:
-            return {"Error": f"Unknown task: {task}"}
+        return task_map[task](job_input)
     except Exception as e:
         logging.error(f"Error processing task {task}: {e}")
         return {"Error": str(e)}
