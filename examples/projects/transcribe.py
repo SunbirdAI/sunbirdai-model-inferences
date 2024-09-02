@@ -88,6 +88,7 @@ def transcription_runpod(audio_file_path: str, language: str, adapter: str) -> s
 
     blob_name = upload_audio_file(file_path=audio_file_path)
     audio_file = blob_name
+    logging.info(f"Filename: {audio_file}")
     request_response = {}
 
     start_time = time.time()
@@ -141,6 +142,7 @@ def transcription_api_endpoint(
         print(transcription)
     """
     file_name = os.path.basename(audio_file_path)
+    logging.info(f"Filename: {file_name}")
     url = "https://api.sunbird.ai/tasks/stt"
     token = os.getenv("AUTH_TOKEN")
     headers = {
@@ -206,8 +208,10 @@ def transcribe(audio_file_path: str, language: str, adapter: str) -> None:
     """
     filename = os.path.basename(audio_file_path)
     file_size_mb, duration_minutes = get_audio_file_info(audio_file_path)
+    logging.info(f"File size: {file_size_mb}mb Duration in minutes: {duration_minutes}")
 
     if math.ceil(duration_minutes) > 10:
+        logging.info("Transcribing from runpod endpoint")
         transcription = transcription_runpod(audio_file_path, language, adapter)
     else:
         transcription = transcription_api_endpoint(audio_file_path, language, adapter)
@@ -218,5 +222,5 @@ def transcribe(audio_file_path: str, language: str, adapter: str) -> None:
 
 
 if __name__ == "__main__":
-    audio_file_path = "../../content/Every Child Can Learn - Episode 29 - Colleen on raising a child with ADHD & Autism.mp3"
-    transcribe(audio_file_path, "eng", "eng")
+    audio_file_path = "../../content/Lutino weng twero pwonye episode 32 final.mp3"
+    transcribe(audio_file_path, "ach", "ach")
