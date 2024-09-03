@@ -1,0 +1,10 @@
+{
+    "input": {
+        "task": "transcribe",
+        "target_lang": "eng",
+        "adapter": "eng",
+        "audio_file": "./content/shecenter_trailer.mp3",
+        "whisper": true,
+        "recognise_speakers": true
+    }
+}

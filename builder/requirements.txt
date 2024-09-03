@@ -30,3 +30,7 @@ Werkzeug
 pyannote.audio
 onnxruntime
 numpy==1.26.4
+soundfile
+datasets
+pydub==0.25.1
+pydub-stubs==0.25.1.1

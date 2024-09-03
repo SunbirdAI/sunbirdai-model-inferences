@@ -1,6 +1,7 @@
 """ Example handler file. """
 
 import logging
+import math
 import os
 import sys
 import time
@@ -31,6 +32,7 @@ from transcribe_utils import (
     setup_pipeline,
     transcribe_audio,
 )
+from transcribe_whisper_utils import WhisperASR, get_audio_file_info
 from translate_utils import process_and_translate_text
 
 load_dotenv()
@@ -54,6 +56,39 @@ def transcribe_main(target_lang, audio_file):
         return None
 
 
+def transcribe_whisper(target_lang, audio_file):
+    model_id = "jq/whisper-large-v2-multilingual"
+    whisper = WhisperASR(model_id)
+    processor, model = whisper.setup_model()
+    language_code = whisper.get_language_code(target_lang, processor)
+
+    if os.path.exists(audio_file):
+        file_size_mb, duration_minutes = get_audio_file_info(audio_file)
+        logging.info(
+            f"File size: {file_size_mb}mb Duration in minutes: {duration_minutes}"
+        )
+        if math.floor(duration_minutes) > 1:
+            pipeline = whisper.setup_pipeline(
+                model, processor, language_code=language_code, batch=True
+            )
+        else:
+            pipeline = whisper.setup_pipeline(
+                model, processor, language_code=language_code, batch=False
+            )
+
+        try:
+            transcription = whisper.transcribe_audio(
+                audio_file, pipeline, return_timestamps=True
+            )
+            return transcription
+        except Exception as e:
+            logging.error(str(e))
+            return None
+    else:
+        logging.error(f"Error downloading language model file: {e}")
+        return None
+
+
 def translate_task(job_input):
     source_language = job_input.get("source_language")
     target_language = job_input.get("target_language")
@@ -73,6 +108,7 @@ def transcribe_task(job_input):
     target_lang = job_input.get("target_lang", "lug")
     audio_file_path = job_input.get("audio_file")
     recognise_speakers = job_input.get("recognise_speakers", False)
+    use_whisper = job_input.get("whisper", False)
 
     if not audio_file_path:
         raise ValueError("Missing audio file for transcription")
@@ -80,16 +116,20 @@ def transcribe_task(job_input):
     audio_file = get_audio_file(audio_file_path)
 
     start_time = time.time()
-    transcription = transcribe_main(target_lang, audio_file)
+    if use_whisper:
+        transcription = transcribe_whisper(target_lang, audio_file)
+        transcription_text = transcription.get("text")
+    else:
+        transcription = transcribe_main(target_lang, audio_file)
+        transcription_text = transcription.get("text")
+
+        if target_lang in ["eng", "lug"]:
+            transcription_text = process_and_correct_text(
+                transcription_text, chunk_size=50, source_language=target_lang
+            )
+
     end_time = time.time()
     execution_time = end_time - start_time
-
-    transcription_text = transcription.get("text")
-
-    if target_lang in ["eng", "lug"]:
-        transcription_text = process_and_correct_text(
-            transcription_text, chunk_size=50, source_language=target_lang
-        )
 
     response["audio_transcription"] = transcription_text
 
