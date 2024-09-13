@@ -67,7 +67,7 @@ class WhisperASR:
     transcription = asr_system.transcribe_audio('path_to_audio_file.wav', pipeline, return_timestamps=True)
     """
 
-    def __init__(self, model_path: str):
+    def __init__(self, model_path: str = "jq/whisper-large-v2-multilingual"):
         """
         Initializes the WhisperASR class with the specified model path.
 
@@ -184,6 +184,36 @@ class WhisperASR:
             **({"batch_size": 2} if batch else {}),
         )
 
+        return whisper_pipeline
+
+    def setup_pipeline_large_v2_lug_eng_extended_merged(self):
+        """
+        Set up the Whisper automatic speech recognition pipeline.
+
+        This method configures and returns a Whisper pipeline using the model
+        'jq/whisper-large-v2-lug-eng-extended-merged'. The pipeline is set up to transcribe
+        audio input using specific configurations like repetition penalty, no repeat n-grams,
+        and temperature.
+
+        Returns:
+            transformers.Pipeline: Configured Whisper ASR pipeline for transcription.
+        """
+        whisper_pipeline = transformers.pipeline(
+            task="automatic-speech-recognition",
+            model="jq/whisper-large-v2-lug-eng-extended-merged",
+            device=self.device,
+            generate_kwargs={
+                "prompt_ids": None,
+                "prompt_condition_type": "first-segment",
+                "condition_on_prev_tokens": True,
+                "task": "transcribe",
+                "language": None,
+                "forced_decoder_ids": None,
+                "repetition_penalty": 1.1,
+                "no_repeat_ngram_size": 2,
+                "temperature": 0.012,
+            },
+        )
         return whisper_pipeline
 
     def load_audio_and_resample(self, audio_file_path, sr=16000):
