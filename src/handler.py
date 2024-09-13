@@ -89,6 +89,13 @@ def transcribe_whisper(target_lang, audio_file):
         return None
 
 
+def transcribe_whisper_large_v2_lug_eng_extended_merged(audio_file):
+    whisper = WhisperASR()
+    pipeline = whisper.setup_pipeline_large_v2_lug_eng_extended_merged()
+    transcription = pipeline(audio_file, return_timestamps=True)
+    return transcription
+
+
 def translate_task(job_input):
     source_language = job_input.get("source_language")
     target_language = job_input.get("target_language")
@@ -109,6 +116,7 @@ def transcribe_task(job_input):
     audio_file_path = job_input.get("audio_file")
     recognise_speakers = job_input.get("recognise_speakers", False)
     use_whisper = job_input.get("whisper", False)
+    organisation = job_input.get("organisation", False)
 
     if not audio_file_path:
         raise ValueError("Missing audio file for transcription")
@@ -118,6 +126,9 @@ def transcribe_task(job_input):
     start_time = time.time()
     if use_whisper:
         transcription = transcribe_whisper(target_lang, audio_file)
+        transcription_text = transcription.get("text")
+    elif organisation:
+        transcription = transcribe_whisper_large_v2_lug_eng_extended_merged(audio_file)
         transcription_text = transcription.get("text")
     else:
         transcription = transcribe_main(target_lang, audio_file)
