@@ -186,12 +186,12 @@ class WhisperASR:
 
         return whisper_pipeline
 
-    def setup_pipeline_large_v2_lug_eng_extended_merged(self):
+    def setup_pipeline_whisper_large_v2_multilingual_prompts_corrected(self):
         """
         Set up the Whisper automatic speech recognition pipeline.
 
         This method configures and returns a Whisper pipeline using the model
-        'jq/whisper-large-v2-lug-eng-extended-merged'. The pipeline is set up to transcribe
+        'jq/whisper-large-v2-multilingual-prompts-corrected"'. The pipeline is set up to transcribe
         audio input using specific configurations like repetition penalty, no repeat n-grams,
         and temperature.
 
@@ -200,21 +200,69 @@ class WhisperASR:
         """
         whisper_pipeline = transformers.pipeline(
             task="automatic-speech-recognition",
-            model="jq/whisper-large-v2-lug-eng-extended-merged",
+            model=self.model_path,
             device=self.device,
-            generate_kwargs={
-                "prompt_ids": None,
-                "prompt_condition_type": "first-segment",
-                "condition_on_prev_tokens": True,
-                "task": "transcribe",
-                "language": None,
-                "forced_decoder_ids": None,
-                "repetition_penalty": 1.1,
-                "no_repeat_ngram_size": 2,
-                "temperature": 0.012,
-            },
+            torch_dtype=torch.float16,
+            model_kwargs=({"attn_implementation": "sdpa"}),  # Maybe a speedup?
         )
         return whisper_pipeline
+
+    def generate_transcribe_kwargs(self, whisper_pipeline, device):
+        """
+        Generates keyword arguments for the transcription task using a Whisper pipeline.
+
+        This function generates a set of `generate_kwargs` to be used for speech transcription
+        by preparing prompt tokens (via the Whisper tokenizer) and setting other task-specific
+        parameters for transcription generation. It is tailored for a scenario where the transcription
+        task involves a predefined prompt (related to dfcu Bank) and specific settings like beam search.
+
+        Args:
+            whisper_pipeline (transformers.Pipeline): The Whisper pipeline object that includes the
+                tokenizer and the model for speech recognition.
+            device (torch.device or str): The device (e.g., 'cpu' or 'cuda') to which the prompt tokens
+                should be moved for model processing.
+
+        Returns:
+            dict: A dictionary containing the arguments for speech transcription, including:
+                - 'prompt_ids' (torch.Tensor): Tokenized prompt IDs from the provided text.
+                - 'prompt_condition_type' (str): Specifies how the prompt should be used (e.g., 'first-segment').
+                - 'condition_on_prev_tokens' (bool): Whether to condition the generation on previous tokens.
+                - 'task' (str): The task type, set to 'transcribe'.
+                - 'language' (NoneType): Language specification for transcription (None implies automatic detection).
+                - 'num_beams' (int): Number of beams for beam search during generation (set to 1 for greedy decoding).
+        """
+        prompt_ids = whisper_pipeline.tokenizer.get_prompt_ids(
+            "dfcu, Quick Banking app, QuickApp, Quick Online, Quick Banking platform, "
+            "dfcu Personal Banking, mobile app, App store, Google Play Store, "
+            "dfcu Quick Online, Quick Connect, internet banking, mobile banking, "
+            "smartphone, national ID, passport, trust factor, Pinnacle Current Account,"
+            " dfcu SACCO account, savings account, Dembe account, Smart Plan account, "
+            "Campus Plus account, Young Savers account, investment club account, "
+            "joint account, Secondary Account Ku-Spot, personal loan, mobi loan, save "
+            "for loan, home loan, agent banking, banking security, "
+            "6th Street, Abayita Ababiri, Bugolobi, Bwaise, Entebbe Road, Impala, "
+            "Jinja Road, Kampala Road, Kawempe, Kikuubo, Kireka, Kyadondo, Kyambogo, "
+            "Lugogo, Makerere, Market Street, Naalya, Nabugabo, Sun City, Acacia, "
+            "Entebbe Town, Kyengera, Luwum Street, Nateete, Ndeeba, Nsambya, Ntinda "
+            "Shopping Centre (Capital Shoppers), Ntinda Trading Centre, Owino, "
+            "William Street, Abim, Arua, Dokolo, Gulu, Hoima, Ibanda, Iganga, Ishaka, "
+            "Isingiro, Jinja, Kabale, Kisoro, Kitgum, Lira, Luweero, Lyantonde, "
+            "Masaka, Mbale, Mbarara, Mukono, Ntungamo, Pader, Pallisa, Rushere, "
+            "Soroti, Tororo. "
+            "Thank you for calling dfcu bank. How can I help you? ",
+            return_tensors="pt",
+        ).to(device)
+
+        generate_kwargs = {
+            "prompt_ids": prompt_ids,
+            "prompt_condition_type": "first-segment",
+            "condition_on_prev_tokens": True,
+            "task": "transcribe",
+            "language": None,
+            "num_beams": 1,
+        }
+
+        return generate_kwargs
 
     def load_audio_and_resample(self, audio_file_path, sr=16000):
         """

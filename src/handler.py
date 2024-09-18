@@ -89,10 +89,15 @@ def transcribe_whisper(target_lang, audio_file):
         return None
 
 
-def transcribe_whisper_large_v2_lug_eng_extended_merged(audio_file):
-    whisper = WhisperASR()
-    pipeline = whisper.setup_pipeline_large_v2_lug_eng_extended_merged()
-    transcription = pipeline(audio_file, return_timestamps=True)
+def transcribe_whisper_large_v2_multilingual_prompts_corrected(audio_file):
+    whisper = WhisperASR(
+        model_path="jq/whisper-large-v2-multilingual-prompts-corrected"
+    )
+    pipeline = whisper.setup_pipeline_whisper_large_v2_multilingual_prompts_corrected()
+    generate_kwargs = whisper.generate_transcribe_kwargs(pipeline, device)
+    transcription = pipeline(
+        audio_file, generate_kwargs=generate_kwargs, return_timestamps=True
+    )
     return transcription
 
 
@@ -128,7 +133,9 @@ def transcribe_task(job_input):
         transcription = transcribe_whisper(target_lang, audio_file)
         transcription_text = transcription.get("text")
     elif organisation:
-        transcription = transcribe_whisper_large_v2_lug_eng_extended_merged(audio_file)
+        transcription = transcribe_whisper_large_v2_multilingual_prompts_corrected(
+            audio_file
+        )
         transcription_text = transcription.get("text")
     else:
         transcription = transcribe_main(target_lang, audio_file)
