@@ -5,11 +5,89 @@ import warnings
 from typing import Tuple
 
 import librosa
+import soundfile as sf
 import torch
 import transformers
 from pydub import AudioSegment
 
 warnings.simplefilter(action="ignore", category=FutureWarning)
+
+# Libraries to remove silence and noise from audio
+USE_ONNX = False  # change this to True if you want to test onnx model
+if USE_ONNX:
+    model, utils = torch.hub.load(
+        repo_or_dir="snakers4/silero-vad",
+        model="silero_vad",
+        force_reload=True,
+        onnx=USE_ONNX,
+    )
+    (get_speech_timestamps, save_audio, read_audio, VADIterator, collect_chunks) = utils
+else:
+    from silero_vad import (
+        VADIterator,
+        collect_chunks,
+        get_speech_timestamps,
+        load_silero_vad,
+        read_audio,
+        save_audio,
+    )
+
+    model = load_silero_vad(onnx=USE_ONNX)
+
+SAMPLING_RATE = 16000
+
+
+def load_audio_resample(audio_file_path, sr=SAMPLING_RATE):
+    """Loads an audio file, resamples it, and writes it to a new file.
+
+    Args:
+        audio_file_path: Path to the original audio file.
+        sr: Target sampling rate (default is SAMPLING_RATE).
+
+    Returns:
+        new_file_path: The path to the new audio file with resampled audio.
+    """
+    # Load the original audio
+    audio, orig_sr = librosa.load(audio_file_path)
+
+    # Resample if the original sample rate is different from the target sample rate
+    if orig_sr != sr:
+        audio = librosa.resample(audio, orig_sr=orig_sr, target_sr=sr)
+
+    # Automatically generate a new file path by appending "_resampled" before the extension
+    base, ext = os.path.splitext(audio_file_path)
+    new_file_path = f"{base}_resampled{ext}"
+
+    # Save the resampled audio to the new file path
+    sf.write(new_file_path, audio, sr)
+
+    # Return the path to the new audio file
+    return new_file_path
+
+
+def remove_audio_silence(audio_file_path, output_file_path=None):
+    # load_audio_and_resample(audio_file_path, sr=SAMPLING_RATE)
+    wav = read_audio(
+        load_audio_resample(audio_file_path, sr=SAMPLING_RATE),
+        sampling_rate=SAMPLING_RATE,
+    )
+    # get speech timestamps from full audio file
+    speech_timestamps = get_speech_timestamps(wav, model, sampling_rate=SAMPLING_RATE)
+    # pprint(speech_timestamps)
+    # merge all speech chunks to one audio
+    file_name, ext = os.path.splitext(audio_file_path)
+    file_name = os.path.basename(file_name)
+    output_file_path = (
+        f"{file_name}_only_speech{ext}"
+        if output_file_path is None
+        else output_file_path
+    )
+    save_audio(
+        output_file_path,
+        collect_chunks(speech_timestamps, wav),
+        sampling_rate=SAMPLING_RATE,
+    )
+    return output_file_path
 
 
 def get_audio_file_info(file_path: str) -> Tuple[float, float]:
@@ -259,6 +337,7 @@ class WhisperASR:
             "condition_on_prev_tokens": True,
             "task": "transcribe",
             "language": None,
+            "no_repeat_ngram_size": 5,
             "num_beams": 1,
         }
 
