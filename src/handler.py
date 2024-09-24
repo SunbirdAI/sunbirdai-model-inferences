@@ -32,7 +32,11 @@ from transcribe_utils import (
     setup_pipeline,
     transcribe_audio,
 )
-from transcribe_whisper_utils import WhisperASR, get_audio_file_info
+from transcribe_whisper_utils import (
+    WhisperASR,
+    get_audio_file_info,
+    remove_audio_silence,
+)
 from translate_utils import process_and_translate_text
 
 load_dotenv()
@@ -95,6 +99,7 @@ def transcribe_whisper_large_v2_multilingual_prompts_corrected(audio_file):
     )
     pipeline = whisper.setup_pipeline_whisper_large_v2_multilingual_prompts_corrected()
     generate_kwargs = whisper.generate_transcribe_kwargs(pipeline, device)
+    audio_file = remove_audio_silence(audio_file_path=audio_file)
     transcription = pipeline(
         audio_file, generate_kwargs=generate_kwargs, return_timestamps=True
     )
