@@ -169,7 +169,7 @@ class WhisperASR:
         )
         model = transformers.WhisperForConditionalGeneration.from_pretrained(
             self.model_path
-        )
+        ).to(self.device)
         return processor, model
 
     def get_language_code(self, language: str, processor) -> str:
@@ -284,6 +284,38 @@ class WhisperASR:
             model_kwargs=({"attn_implementation": "sdpa"}),  # Maybe a speedup?
         )
         return whisper_pipeline
+
+    def auto_detect_audio_language(self, audio_file_path, processor, model):
+        audio = self.load_audio_and_resample(audio_file_path=audio_file_path)
+        salt_whisper_language_id_tokens = {
+            "eng": 50259,
+            "ach": 50357,
+            "lgg": 50356,
+            "lug": 50355,
+            "nyn": 50354,
+            "teo": 50353,
+        }
+        token_to_language = {}
+        for lang, token in salt_whisper_language_id_tokens.items():
+            token_to_language[token] = lang
+
+        input_features = processor(
+            audio,
+            sampling_rate=16000,
+            return_tensors="pt",
+            do_normalize=True,
+            device=self.device,
+        ).input_features
+        with torch.no_grad():
+            predicted_ids = model.generate(
+                input_features.to(self.device), max_new_tokens=10
+            )[0]
+
+        language_token = int(predicted_ids[1])
+
+        detected_language = token_to_language.get(language_token, None)
+
+        return detected_language
 
     def generate_transcribe_kwargs(self, whisper_pipeline, device):
         """

@@ -1,0 +1,8 @@
+{
+    "input": {
+        "task": "transcribe",
+        "audio_file": "./content/shecenter_trailer.mp3",
+        "organisation": true,
+        "recognise_speakers": false
+    }
+}
