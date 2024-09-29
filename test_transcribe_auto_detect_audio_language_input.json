@@ -1,0 +1,6 @@
+{
+    "input": {
+        "task": "auto_detect_audio_language",
+        "audio_file": "./content/shecenter_trailer.mp3"
+    }
+}

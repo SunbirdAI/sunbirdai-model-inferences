@@ -172,6 +172,24 @@ def transcribe_task(job_input):
     return response
 
 
+def transcribe_auto_detect_audio_language(job_input):
+    response = {}
+    audio_file_path = job_input.get("audio_file")
+
+    if not audio_file_path:
+        raise ValueError("Missing audio file for language detection")
+
+    audio_file = get_audio_file(audio_file_path)
+    whisper = WhisperASR(
+        model_path="jq/whisper-large-v2-multilingual-prompts-corrected"
+    )
+    processor, model = whisper.setup_model()
+    detected_language = whisper.auto_detect_audio_language(audio_file, processor, model)
+    response["detected_language"] = detected_language
+
+    return response
+
+
 def asr_summarise_task(job_input):
     source_language = job_input.get("source_language")
     target_language = job_input.get("target_language")
@@ -245,6 +263,7 @@ def handler(job):
         "transcribe": transcribe_task,
         "asr_summarise": asr_summarise_task,
         "auto_detect_language": auto_detect_language_task,
+        "auto_detect_audio_language": transcribe_auto_detect_audio_language,
         "language_classify": language_classification_task,
         "summarise": summarization_task,
     }
