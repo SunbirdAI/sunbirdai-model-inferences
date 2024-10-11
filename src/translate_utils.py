@@ -50,36 +50,46 @@ def chunk_text(text, chunk_size=50):
 
 def split_text_with_delimiters(text):
     """
-    Splits the input text at each occurrence of '.', or '?',
+    Splits the input text at each occurrence of '.', '?', or '!',
     while maintaining these delimiters in the resulting split portions.
 
     Args:
-        text (str): The input text to be split.
+      text (str): The input text to be split.
 
     Returns:
-        list: A list of strings where each string is a segment of the original
-              text ending with one of the specified delimiters.
+      list: A list of strings where each string is a segment of the original
+            text ending with one of the specified delimiters.
 
     Example:
-        >>> text = "Hello! How are you doing? I hope you're doing well. Have a great day!"
-        >>> split_text_with_delimiters(text)
-        ['Hello! How are you doing?', "I hope you're doing well.", 'Have a great day!']
+      >>> text = "Hello! How are you doing? I hope you're doing well. Have a great day!"
+      >>> split_text_with_delimiters(text)
+      ['Hello! How are you doing?', "I hope you're doing well.", 'Have a great day!']
     """
-    # Define the regular expression pattern to match '.', or '?', capturing them
-    pattern = r"([.!])"
+    # Define the regular expression pattern to match '.', '?', or '!', capturing them
+    pattern = r"([.?!])"
+
     # Split the text based on the pattern, including the delimiters
     split_result = re.split(pattern, text)
+
     # Combine each delimiter with the preceding text part
     combined_result = [
         split_result[i] + split_result[i + 1]
         for i in range(0, len(split_result) - 1, 2)
     ]
+
+    # If the text does not end with a delimiter, append the last part
+    if len(split_result) % 2 != 0 and split_result[-1].strip():
+        combined_result.append(split_result[-1])
+
+    # Remove any empty strings from the result
+    combined_result = [part for part in combined_result if part.strip()]
+
     return combined_result
 
 
 def contains_delimiters(text):
     """
-    Checks if the input text contains any of the delimiters: '.', or '?'.
+    Checks if the input text contains any of the delimiters: '.', or '?' or '!'.
 
     Args:
         text (str): The input text to be checked.
@@ -94,7 +104,7 @@ def contains_delimiters(text):
         False
     """
     # Define the regular expression pattern to match '.', or '?'
-    pattern = r"[.!]"
+    pattern = r"[.?!]"
     # Search for the pattern in the text
     return bool(re.search(pattern, text))
 
