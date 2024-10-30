@@ -4,7 +4,11 @@ import torch
 from transformers import TextStreamer
 from unsloth import FastLanguageModel
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+try:
+    device = torch.device("cuda")
+except Exception:
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 logging.basicConfig(level=logging.INFO)
 
 

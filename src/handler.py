@@ -40,7 +40,10 @@ from transcribe_whisper_utils import (
 from translate_utils import process_and_translate_text
 
 load_dotenv()
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+try:
+    device = torch.device("cuda")
+except Exception:
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def transcribe_main(target_lang, audio_file):

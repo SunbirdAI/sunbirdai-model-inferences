@@ -18,7 +18,11 @@ from transformers import (
 
 load_dotenv()
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+try:
+    device = torch.device("cuda")
+except Exception:
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 lang_config = {
     "ach": "Sunbird/sunbird-mms",
     "lug": "Sunbird/sunbird-mms",
