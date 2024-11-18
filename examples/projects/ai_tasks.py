@@ -61,6 +61,7 @@ class AITasks:
         data = {
             "language": language,
             "adapter": language,
+            "whisper": True,
         }
 
         try:

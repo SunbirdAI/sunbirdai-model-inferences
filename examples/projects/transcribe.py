@@ -100,6 +100,7 @@ def transcription_runpod(audio_file_path: str, language: str, adapter: str) -> s
                     "target_lang": language,
                     "adapter": adapter,
                     "audio_file": audio_file,
+                    "whisper": True,
                 }
             },
             timeout=900,  # Timeout in seconds.
@@ -160,6 +161,7 @@ def transcription_api_endpoint(
     data = {
         "language": language,
         "adapter": adapter,
+        "whisper": True,
     }
 
     response = requests.post(url, headers=headers, files=files, data=data)
