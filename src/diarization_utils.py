@@ -11,7 +11,10 @@ from pyannote.audio import Pipeline
 load_dotenv()
 
 SAMPLE_RATE = 16000
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+try:
+    device = torch.device("cuda")
+except Exception:
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 class DiarizationPipeline:

@@ -6,6 +6,11 @@ model = transformers.M2M100ForConditionalGeneration.from_pretrained(
     "jq/nllb-1.3B-asr-summarisation"
 )
 
+try:
+    device = torch.device("cuda")
+except Exception:
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 
 def translate(text, source_language, target_language):
     _language_codes = {
@@ -16,8 +21,6 @@ def translate(text, source_language, target_language):
         "nyn": 256002,
         "teo": 256006,
     }
-
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     inputs = tokenizer(text, return_tensors="pt").to(device)
     inputs["input_ids"][0][0] = _language_codes[source_language]

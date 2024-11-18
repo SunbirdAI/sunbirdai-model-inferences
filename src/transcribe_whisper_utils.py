@@ -153,7 +153,10 @@ class WhisperASR:
         model_path (str): The path or identifier of the pre-trained model (e.g., a Hugging Face model ID).
         """
         self.model_path = model_path
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        try:
+            self.device = torch.device("cuda")
+        except Exception:
+            self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     def setup_model(self):
         """
