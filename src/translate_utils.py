@@ -42,7 +42,7 @@ def translate(text, source_language, target_language):
     return result
 
 
-def chunk_text(text, chunk_size=50):
+def chunk_text(text, chunk_size=20):
     """
     Split the text into chunks of specified size (default: 50 words).
     """
@@ -133,7 +133,7 @@ def translate_text_with_delimiters(text, source_language, target_language):
     if contains_delimiters(text):
         sentences = split_text_with_delimiters(text)
     else:
-        sentences = chunk_text(text, chunk_size=50)
+        sentences = chunk_text(text, chunk_size=20)
 
     translated_sentences = [
         translate(sentence.strip(), source_language, target_language)
