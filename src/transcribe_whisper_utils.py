@@ -196,6 +196,10 @@ class WhisperASR:
             "Acholi": "ach",
             "Ateso": "teo",
             "Lugbara": "lgg",
+            "Swahili": "swa",
+            "Kinyarwanda": "kin",
+            "Lusoga": "xog",
+            "Lumasaba": "myx"
         }
 
         code_to_language = {v: k for k, v in language_codes.items()}
@@ -217,6 +221,10 @@ class WhisperASR:
             "lug": 50355,
             "nyn": 50354,
             "teo": 50353,
+            'xog': 50352,
+            'kin': 50350,
+            'myx': 50349,
+            'swa': 50318,
         }
 
         token = language_id_tokens[code]
@@ -297,6 +305,10 @@ class WhisperASR:
             "lug": 50355,
             "nyn": 50354,
             "teo": 50353,
+            'xog': 50352,
+            'kin': 50350,
+            'myx': 50349,
+            'swa': 50318,
         }
         token_to_language = {}
         for lang, token in salt_whisper_language_id_tokens.items():
@@ -430,7 +442,7 @@ class WhisperASR:
 
 
 if __name__ == "__main__":
-    model_id = "jq/whisper-large-v2-multilingual"
+    model_id = "jq/whisper-large-v2-salt-plus-xog-myx-kin-swa-sample-packing"
     language = "ach"
     asr_system = WhisperASR(model_id)
     # Set up the model and processor by calling setup_model()

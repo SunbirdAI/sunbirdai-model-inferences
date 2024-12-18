@@ -53,7 +53,7 @@ class TaskHandler:
 
         start_time = time.time()
         if use_whisper:
-            model_id = "jq/whisper-large-v2-multilingual"
+            model_id = "jq/whisper-large-v2-salt-plus-xog-myx-kin-swa-sample-packing"
             whisper = WhisperASR(model_id)
             processor, model = whisper.setup_model()
             language_code = whisper.get_language_code(target_lang, processor)
