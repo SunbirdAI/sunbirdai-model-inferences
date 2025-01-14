@@ -2,10 +2,10 @@ import torch
 import transformers
 
 tokenizer = transformers.NllbTokenizer.from_pretrained(
-    "facebook/nllb-200-distilled-1.3B"
+    "./model-weights/nllb-200-distilled-1.3B"
 )
 model = transformers.M2M100ForConditionalGeneration.from_pretrained(
-    "jq/nllb-1.3B-many-to-many-pronouncorrection-charaug"
+    "./model-weights/nllb-1.3B-many-to-many-pronouncorrection-charaug"
 )
 import re
 

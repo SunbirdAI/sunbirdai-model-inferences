@@ -24,12 +24,12 @@ except Exception:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 lang_config = {
-    "ach": "Sunbird/sunbird-mms",
-    "lug": "Sunbird/sunbird-mms",
-    "lgg": "Sunbird/sunbird-mms",
-    "teo": "Sunbird/sunbird-mms",
-    "nyn": "Sunbird/sunbird-mms",
-    "eng": "Sunbird/sunbird-mms",
+    "ach": "./model-weights/asr-mms-salt",
+    "lug": "./model-weights/asr-mms-salt",
+    "lgg": "./model-weights/asr-mms-salt",
+    "teo": "./model-weights/asr-mms-salt",
+    "nyn": "./model-weights/asr-mms-salt",
+    "eng": "./model-weights/asr-mms-salt",
 }
 
 
@@ -220,7 +220,7 @@ def transcribe_audio(pipe, audio_file: str):
 
 
 if __name__ == "__main__":
-    model_id = "Sunbird/sunbird-mms"
+    model_id = "./model-weights/asr-mms-salt"
     language = "ach"
     model, tokenizer, processor, feature_extractor = setup_model(model_id, language)
     decoder = setup_decoder(language, tokenizer, feature_extractor)

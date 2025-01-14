@@ -6,13 +6,13 @@ from transformers import (
     AutoTokenizer,
 )
 
-tokenizer = AutoTokenizer.from_pretrained("yigagilbert/salt_language_ID")
-model = AutoModelForSeq2SeqLM.from_pretrained("yigagilbert/salt_language_ID")
+tokenizer = AutoTokenizer.from_pretrained("./model-weights/salt_language_ID")
+model = AutoModelForSeq2SeqLM.from_pretrained("./model-weights/salt_language_ID")
 classification_tokenizer = AutoTokenizer.from_pretrained(
-    "yigagilbert/salt_language_Classification"
+    "./model-weights/salt_language_Classification"
 )
 classification_model = AutoModelForSequenceClassification.from_pretrained(
-    "yigagilbert/salt_language_Classification"
+    "./model-weights/salt_language_Classification"
 )
 
 # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")

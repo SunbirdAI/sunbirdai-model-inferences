@@ -1,9 +1,11 @@
 import torch
 import transformers
 
-tokenizer = transformers.NllbTokenizer.from_pretrained("jq/nllb-1.3B-asr-summarisation")
+tokenizer = transformers.NllbTokenizer.from_pretrained(
+    "./model-weights/nllb-1.3B-asr-summarisation"
+)
 model = transformers.M2M100ForConditionalGeneration.from_pretrained(
-    "jq/nllb-1.3B-asr-summarisation"
+    "./model-weights/nllb-1.3B-asr-summarisation"
 )
 
 try:

@@ -53,7 +53,7 @@ class TaskHandler:
 
         start_time = time.time()
         if use_whisper:
-            model_id = "jq/whisper-large-v2-salt-plus-xog-myx-kin-swa-sample-packing"
+            model_id = "./model-weights/whisper-large-v2-salt-plus-xog-myx-kin-swa-sample-packing"
             whisper = WhisperASR(model_id)
             processor, model = whisper.setup_model()
             language_code = whisper.get_language_code(target_lang, processor)
@@ -74,7 +74,7 @@ class TaskHandler:
             transcription_text = transcription.get("text")
         elif organisation:
             whisper = WhisperASR(
-                model_path="jq/whisper-large-v2-multilingual-prompts-corrected"
+                model_path="./model-weights/whisper-large-v2-multilingual-prompts-corrected"
             )
             pipeline = (
                 whisper.setup_pipeline_whisper_large_v2_multilingual_prompts_corrected()
@@ -86,7 +86,7 @@ class TaskHandler:
             )
             transcription_text = transcription.get("text")
         else:
-            model_id = "Sunbird/sunbird-mms"
+            model_id = "./model-weights/asr-mms-salt"
             language = target_lang
 
             model, tokenizer, processor, feature_extractor = setup_model(
@@ -210,7 +210,7 @@ class TaskHandler:
 
         audio_file = get_audio_file(audio_file_path)
         whisper = WhisperASR(
-            model_path="jq/whisper-large-v2-multilingual-prompts-corrected"
+            model_path="./model-weights/whisper-large-v2-multilingual-prompts-corrected"
         )
         processor, model = whisper.setup_model()
         detected_language = whisper.auto_detect_audio_language(
