@@ -1,18 +1,20 @@
+import re
+
 import torch
 import transformers
 
-tokenizer = transformers.NllbTokenizer.from_pretrained(
-    "facebook/nllb-200-distilled-1.3B"
-)
-model = transformers.M2M100ForConditionalGeneration.from_pretrained(
-    "jq/nllb-1.3B-many-to-many-pronouncorrection-charaug"
-)
-import re
+from salt_constants import SALT_LANGUAGE_TOKENS_NLLB_TRANSLATION
+
+model_path = "Sunbird/translate-nllb-3.3b-salt"
+tokenizer = transformers.NllbTokenizer.from_pretrained(model_path)
+model = transformers.M2M100ForConditionalGeneration.from_pretrained(model_path)
 
 try:
     device = torch.device("cuda")
+    model = model.eval().to(device)
 except Exception:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    model = model.eval().to(device)
 
 
 def make_response(response):
@@ -20,14 +22,7 @@ def make_response(response):
 
 
 def translate(text, source_language, target_language):
-    _language_codes = {
-        "eng": 256047,
-        "ach": 256111,
-        "lgg": 256008,
-        "lug": 256110,
-        "nyn": 256002,
-        "teo": 256006,
-    }
+    _language_codes = SALT_LANGUAGE_TOKENS_NLLB_TRANSLATION
 
     inputs = tokenizer(text, return_tensors="pt").to(device)
     inputs["input_ids"][0][0] = _language_codes[source_language]
