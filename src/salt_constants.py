@@ -27,7 +27,6 @@ SALT_LANGUAGE_NAMES = {
     "lsm": "Samia",
     "lth": "Thur",
     "luc": "Aringa",
-    "lug": "Luganda",
     "lzm": "Lulubo",
     "mhi": "Ma'di",
     "ndp": "Ndo",
@@ -66,6 +65,7 @@ SALT_LANGUAGE_TOKENS_NLLB_TRANSLATION = {
     "ach": 256111,  # luo_Latn
     "ibo": 256073,  # ibo_Latn
     "swa": 256168,  # swh_Latn
+    "kin": 256094,  # kin_Latn
     # Overwrite unused language tokens
     "nyn": 256002,
     "teo": 256006,
