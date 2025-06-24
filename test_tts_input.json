@@ -1,0 +1,11 @@
+{
+    "input": {
+        "task": "tts",
+        "text": "Hello, this is a test of the text-to-speech system.",
+        "temperature": 0.8,
+        "top_k": 50,
+        "top_p": 1.0,
+        "max_new_audio_tokens": 2048,
+        "normalize": true
+    }
+}
