@@ -199,7 +199,7 @@ class WhisperASR:
             "Swahili": "swa",
             "Kinyarwanda": "kin",
             "Lusoga": "xog",
-            "Lumasaba": "myx"
+            "Lumasaba": "myx",
         }
 
         code_to_language = {v: k for k, v in language_codes.items()}
@@ -221,10 +221,10 @@ class WhisperASR:
             "lug": 50355,
             "nyn": 50354,
             "teo": 50353,
-            'xog': 50352,
-            'kin': 50350,
-            'myx': 50349,
-            'swa': 50318,
+            "xog": 50352,
+            "kin": 50350,
+            "myx": 50349,
+            "swa": 50318,
         }
 
         token = language_id_tokens[code]
@@ -305,10 +305,10 @@ class WhisperASR:
             "lug": 50355,
             "nyn": 50354,
             "teo": 50353,
-            'xog': 50352,
-            'kin': 50350,
-            'myx': 50349,
-            'swa': 50318,
+            "xog": 50352,
+            "kin": 50350,
+            "myx": 50349,
+            "swa": 50318,
         }
         token_to_language = {}
         for lang, token in salt_whisper_language_id_tokens.items():

@@ -1,8 +1,12 @@
 {
     "input": {
-        "task": "translate",
-        "source_language": "eng",
-        "target_language": "lug",
-        "text": "Good morning people. Why does the system seem to break when the second sentence has a question mark at the end?"
+        "task": "tts",
+        "text": "Hello, this is a test of the text-to-speech system.",
+        "speaker_id": 248,
+        "temperature": 0.8,
+        "top_k": 50,
+        "top_p": 1.0,
+        "max_new_audio_tokens": 2048,
+        "normalize": false
     }
 }

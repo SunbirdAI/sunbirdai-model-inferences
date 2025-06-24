@@ -220,14 +220,18 @@ class TaskHandler:
         return {"detected_language": detected_language}
 
     def tts(self, job_input):
-        from spark_tts.tts_utils import SparkTTS
-        import io, base64
+        import base64
+        import io
+
         import soundfile as sf
+
+        from spark_tts.tts_utils import SparkTTS
 
         text = job_input.get("text")
         if not text:
             raise ValueError("Missing text for TTS")
 
+        speaker_id = job_input.get("speaker_id", 248)
         temperature = job_input.get("temperature", 0.8)
         top_k = job_input.get("top_k", 50)
         top_p = job_input.get("top_p", 1.0)
@@ -237,6 +241,7 @@ class TaskHandler:
         tts = SparkTTS()
         wav, sr = tts.text_to_speech(
             text,
+            speaker_id,
             temperature=temperature,
             top_k=top_k,
             top_p=top_p,

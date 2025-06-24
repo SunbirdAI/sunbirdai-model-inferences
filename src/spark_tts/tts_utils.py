@@ -1,12 +1,12 @@
 import os
-import sys
 import re
 import shutil
+import sys
 from typing import Optional, Tuple
 
 import numpy as np
 import torch
-from huggingface_hub import snapshot_download, hf_hub_download
+from huggingface_hub import hf_hub_download, snapshot_download
 from unsloth import FastModel
 
 
@@ -40,7 +40,7 @@ class SparkTTS:
 
         # Load the FastModel
         model_path = os.path.join(self.cache_dir, "LLM")
-        self.model, _ = FastModel.from_pretrained(
+        self.model, self.tokenizer = FastModel.from_pretrained(
             model_name=model_path,
             max_seq_length=2048,
             dtype=torch.float32,
@@ -51,15 +51,17 @@ class SparkTTS:
         self.model.to(self.device)
 
         # Initialize audio tokenizer/vocoder
-        sys.path.append('Spark-TTS')
+        sys.path.append("Spark-TTS")
 
         from sparktts.models.audio_tokenizer import BiCodecTokenizer
+
         self.audio_tokenizer = BiCodecTokenizer(self.cache_dir, str(self.device))
 
     @torch.inference_mode()
     def generate_tokens(
         self,
         text: str,
+        speaker_id: int = 242,
         temperature: float = 0.8,
         top_k: int = 50,
         top_p: float = 1.0,
@@ -72,32 +74,56 @@ class SparkTTS:
             pred_semantic_ids: torch.Tensor
         """
         # Control prompt prefix for voice
-        input_text = f"242: {text}"
-        out = self.model.generate(
-            input_text,
+        prompt = f"<|task_tts|><|start_content|>{speaker_id}: {text}<|end_content|><|start_global_token|>"
+        model_inputs = self.tokenizer([prompt], return_tensors="pt").to(self.device)
+        generated_ids = self.model.generate(
+            **model_inputs,
+            max_new_tokens=max_new_audio_tokens,  # Limit generation length
+            do_sample=True,
             temperature=temperature,
             top_k=top_k,
             top_p=top_p,
-            max_new_tokens=max_new_audio_tokens,
+            eos_token_id=self.tokenizer.eos_token_id,  # Stop token
+            pad_token_id=self.tokenizer.pad_token_id,  # Use models pad token id
         )
-        output_str = out[0]
-        # Extract semantic and global tokens
-        semantic_ids = re.findall(r"<\|bicodec_semantic_(\d+?)\|>", output_str)
-        global_ids = re.findall(r"<\|bicodec_global_(\d+?)\|>", output_str)
-        if not semantic_ids:
-            raise RuntimeError("No semantic tokens generated.")
+        new_tokens = generated_ids[:, model_inputs.input_ids.shape[1] :]
+        predicts_text = self.tokenizer.batch_decode(
+            new_tokens, skip_special_tokens=False
+        )[0]
 
-        pred_semantic = torch.tensor([int(i) for i in semantic_ids], dtype=torch.long)
-        pred_global = (
-            torch.tensor([int(i) for i in global_ids], dtype=torch.long)
-            if global_ids
-            else torch.zeros(1, dtype=torch.long)
-        )
-        return pred_global.unsqueeze(0), pred_semantic.unsqueeze(0)
+        # Extract semantic token IDs using regex
+        semantic_matches = re.findall(r"<\|bicodec_semantic_(\d+)\|>", predicts_text)
+        if not semantic_matches:
+            print("Warning: No semantic tokens found in the generated output.")
+            # Handle appropriately - perhaps return silence or raise error
+            return np.array([], dtype=np.float32)
+
+        pred_semantic_ids = (
+            torch.tensor([int(token) for token in semantic_matches]).long().unsqueeze(0)
+        )  # Add batch dim
+
+        # Extract global token IDs using regex (assuming controllable mode also generates these)
+        global_matches = re.findall(r"<\|bicodec_global_(\d+)\|>", predicts_text)
+        if not global_matches:
+            print(
+                "Warning: No global tokens found in the generated output (controllable mode). Might use defaults or fail."
+            )
+            pred_global_ids = torch.zeros((1, 1), dtype=torch.long)
+        else:
+            pred_global_ids = (
+                torch.tensor([int(token) for token in global_matches])
+                .long()
+                .unsqueeze(0)
+            )  # Add batch dim
+
+        pred_global_ids = pred_global_ids.unsqueeze(0)  # Shape becomes (1, 1, N_global)
+
+        return pred_global_ids, pred_semantic_ids
 
     def text_to_speech(
         self,
         text: str,
+        speaker_id: int = 242,
         temperature: float = 0.8,
         top_k: int = 50,
         top_p: float = 1.0,
@@ -110,16 +136,22 @@ class SparkTTS:
             waveform: np.ndarray (float32)
             sample_rate: int
         """
-        pred_global, pred_semantic = self.generate_tokens(
-            text, temperature, top_k, top_p, max_new_audio_tokens
+        pred_global_ids, pred_semantic_ids = self.generate_tokens(
+            text=text,
+            speaker_id=speaker_id,
+            temperature=temperature,
+            top_k=top_k,
+            top_p=top_p,
+            max_new_audio_tokens=max_new_audio_tokens,
         )
         wav = self.audio_tokenizer.detokenize(
-            pred_global.to(self.device).squeeze(0),
-            pred_semantic.to(self.device),
+            pred_global_ids.to(self.device).squeeze(0),
+            pred_semantic_ids.to(self.device),
         )
         if normalize:
-            sys.path.append('Spark-TTS')
-            from sparktts.utils.audio_utils import audio_volume_normalize
+            sys.path.append("Spark-TTS")
+            from sparktts.utils.audio import audio_volume_normalize
+
             wav = audio_volume_normalize(wav)
         # Default Spark-TTS sample rate
         sr = 16000
@@ -147,7 +179,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Spark-TTS text-to-speech utility.")
     parser.add_argument("-t", "--text", required=True, help="Input text to convert.")
     parser.add_argument(
-        "-o", "--output", default="output.wav", help="Output WAV filename.")
+        "-o", "--output", default="output.wav", help="Output WAV filename."
+    )
     parser.add_argument(
         "--no-normalize",
         action="store_true",
@@ -155,8 +188,10 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    tts = SparkTTS(adapter_repo="jq/spark-tts-salt", adapter_filename="model.safetensors")
+    tts = SparkTTS(
+        adapter_repo="jq/spark-tts-salt", adapter_filename="model.safetensors"
+    )
     tts.save_wav(
-        args.text, args.output, normalize=not args.no_normalize
+        args.text, args.output, normalize=not args.no_normalize, speaker_id=248
     )
     print(f"Saved: {args.output}")
