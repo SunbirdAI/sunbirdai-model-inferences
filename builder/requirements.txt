@@ -5,9 +5,10 @@
 # git+https://github.com/runpod/runpod-python.git
 # To learn more, see https://pip.pypa.io/en/stable/reference/requirements-file-format/
 
-runpod==1.6.2
+runpod==1.7.9
+xformers
 transformers
-kenlm
+# kenlm
 bitsandbytes
 accelerate
 sentencepiece
@@ -22,8 +23,7 @@ google-cloud-storage
 jiwer
 librosa
 Werkzeug
-unsloth[colab-new] @ git+https://github.com/unslothai/unsloth.git
-xformers 
+unsloth @ git+https://github.com/unslothai/unsloth.git
 trl
 peft
 Werkzeug
@@ -36,3 +36,7 @@ pydub==0.25.1
 pydub-stubs==0.25.1.1
 silero-vad
 torchaudio
+omegaconf
+einx
+einops
+huggingface-hub
