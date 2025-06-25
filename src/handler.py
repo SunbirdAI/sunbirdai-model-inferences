@@ -219,6 +219,41 @@ class TaskHandler:
 
         return {"detected_language": detected_language}
 
+    def tts(self, job_input):
+        import base64
+        import io
+
+        import soundfile as sf
+
+        from spark_tts.tts_utils import SparkTTS
+
+        text = job_input.get("text")
+        if not text:
+            raise ValueError("Missing text for TTS")
+
+        speaker_id = job_input.get("speaker_id", 248)
+        temperature = job_input.get("temperature", 0.8)
+        top_k = job_input.get("top_k", 50)
+        top_p = job_input.get("top_p", 1.0)
+        max_new_audio_tokens = job_input.get("max_new_audio_tokens", 2048)
+        normalize = job_input.get("normalize", True)
+
+        tts = SparkTTS()
+        wav, sr = tts.text_to_speech(
+            text,
+            speaker_id,
+            temperature=temperature,
+            top_k=top_k,
+            top_p=top_p,
+            max_new_audio_tokens=max_new_audio_tokens,
+            normalize=normalize,
+        )
+
+        buf = io.BytesIO()
+        sf.write(buf, wav, sr, format="WAV")
+        b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+        return {"wav_base64": b64, "sample_rate": sr}
+
 
 def handler(job):
     """Handler function that processes jobs."""
@@ -239,6 +274,7 @@ def handler(job):
         "auto_detect_audio_language": task_handler.auto_detect_audio_language,
         "language_classify": task_handler.language_classify,
         "summarise": task_handler.summarise,
+        "tts": task_handler.tts,
     }
 
     if task not in task_map:

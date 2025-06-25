@@ -2,4 +2,4 @@
 
 set -e
 
-docker run --rm -p 8088:8088 sunbirddocker/sunbirdai-model-inferences:v2.3.2
+docker run --rm -p 8088:8088 sunbirddocker/sunbirdai-model-inferences:v2.3.3

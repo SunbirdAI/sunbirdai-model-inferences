@@ -164,3 +164,6 @@ jobs/
 
 # GCP Credentials
 credentials.json
+
+Spark-TTS/
+Spark-TTS-0.5B/
