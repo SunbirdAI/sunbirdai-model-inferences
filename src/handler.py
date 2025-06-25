@@ -224,6 +224,7 @@ class TaskHandler:
         import io
 
         import soundfile as sf
+        import gzip
 
         from spark_tts.tts_utils import SparkTTS
 
@@ -251,8 +252,11 @@ class TaskHandler:
 
         buf = io.BytesIO()
         sf.write(buf, wav, sr, format="WAV")
-        b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
-        return {"wav_base64": b64, "sample_rate": sr}
+        # compress raw WAV bytes then base64 encode
+        wav_bytes = buf.getvalue()
+        compressed_bytes = gzip.compress(wav_bytes)
+        b64 = base64.b64encode(compressed_bytes).decode("utf-8")
+        return {"wav_base64_compressed": b64, "sample_rate": sr, "compression": "gzip"}
 
 
 def handler(job):
