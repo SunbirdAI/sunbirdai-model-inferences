@@ -287,7 +287,7 @@ class TaskHandler:
             pass
 
         return {
-            "url": signed_url,
+            "audio_url": signed_url,
             "blob": blob_name,
             "wav_base64": b64,
             "sample_rate": sr,
