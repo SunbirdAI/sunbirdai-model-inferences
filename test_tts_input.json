@@ -1,7 +1,7 @@
 {
     "input": {
         "task": "tts",
-        "text": "Hello, this is a test of the text-to-speech system.",
+        "text": "Kinyarwanda is spoken by more than 12 million people, yet high quality ASR systems remain scarce. This dataset and accompanying hackathon aim to: Accelerate speech to text research and open-source toolkits for Kinyarwanda. Provide diverse, real-world audio covering critical societal domains.",
         "speaker_id": 248,
         "temperature": 0.8,
         "top_k": 50,

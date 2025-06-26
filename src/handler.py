@@ -221,6 +221,7 @@ class TaskHandler:
         return {"detected_language": detected_language}
 
     def tts(self, job_input):
+        import base64
         import datetime
         import io
         import os
@@ -258,8 +259,7 @@ class TaskHandler:
         # write WAV to buffer
         buf = io.BytesIO()
         sf.write(buf, wav, sr, format="WAV")
-        # b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
-        # return {"wav_base64": b64, "sample_rate": sr}
+        b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
         buf.seek(0)
 
         # convert buffer WAV to MP3 via pydub
@@ -286,7 +286,12 @@ class TaskHandler:
         except OSError:
             pass
 
-        return {"url": signed_url, "sample_rate": sr, "blob": blob_name}
+        return {
+            "url": signed_url,
+            "blob": blob_name,
+            "wav_base64": b64,
+            "sample_rate": sr,
+        }
 
 
 def handler(job):
