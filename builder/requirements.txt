@@ -24,6 +24,7 @@ jiwer
 librosa
 Werkzeug
 unsloth @ git+https://github.com/unslothai/unsloth.git
+unsloth_zoo
 trl
 peft
 Werkzeug
