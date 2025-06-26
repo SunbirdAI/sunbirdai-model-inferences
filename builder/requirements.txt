@@ -6,7 +6,7 @@
 # To learn more, see https://pip.pypa.io/en/stable/reference/requirements-file-format/
 
 runpod==1.7.12
-xformers
+xformers==0.0.30
 transformers
 # kenlm
 bitsandbytes

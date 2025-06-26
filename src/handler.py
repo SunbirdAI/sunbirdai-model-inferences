@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 import sys
@@ -220,12 +221,16 @@ class TaskHandler:
         return {"detected_language": detected_language}
 
     def tts(self, job_input):
-        import base64
+        import datetime
         import io
+        import os
+        import tempfile
+        import uuid
 
         import soundfile as sf
-        import gzip
+        from pydub import AudioSegment
 
+        from gcp_storage_utils import upload_audio_file_to_gcs
         from spark_tts.tts_utils import SparkTTS
 
         text = job_input.get("text")
@@ -250,13 +255,38 @@ class TaskHandler:
             normalize=normalize,
         )
 
+        # write WAV to buffer
         buf = io.BytesIO()
         sf.write(buf, wav, sr, format="WAV")
-        # compress raw WAV bytes then base64 encode
-        wav_bytes = buf.getvalue()
-        compressed_bytes = gzip.compress(wav_bytes)
-        b64 = base64.b64encode(compressed_bytes).decode("utf-8")
-        return {"wav_base64_compressed": b64, "sample_rate": sr, "compression": "gzip"}
+        # b64 = base64.b64encode(buf.getvalue()).decode("utf-8")
+        # return {"wav_base64": b64, "sample_rate": sr}
+        buf.seek(0)
+
+        # convert buffer WAV to MP3 via pydub
+        audio = AudioSegment.from_file(buf, format="wav")
+        temp_mp3 = tempfile.NamedTemporaryFile(delete=False, suffix=".mp3")
+        audio.export(temp_mp3.name, format="mp3")
+        temp_mp3.close()
+
+        # upload MP3 to GCS
+        bucket = os.getenv("AUDIO_CONTENT_BUCKET_NAME")
+        # include UTC timestamp in blob name for uniqueness
+        timestamp = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+        blob_name = f"tts/{timestamp}_{uuid.uuid4()}.mp3"
+        signed_url = upload_audio_file_to_gcs(
+            local_file_path=temp_mp3.name,
+            bucket_name=bucket,
+            destination_blob_name=blob_name,
+            expiration_minutes=30,
+        )
+
+        # cleanup temp file
+        try:
+            os.remove(temp_mp3.name)
+        except OSError:
+            pass
+
+        return {"url": signed_url, "sample_rate": sr, "blob": blob_name}
 
 
 def handler(job):
