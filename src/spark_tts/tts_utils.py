@@ -123,11 +123,12 @@ class SparkTTS:
     def text_to_speech(
         self,
         text: str,
-        speaker_id: int = 242,
+        speaker_id: int = 248,
         temperature: float = 0.8,
         top_k: int = 50,
         top_p: float = 1.0,
         max_new_audio_tokens: int = 2048,
+        sample_rate: int = 16000,
         normalize: bool = True,
     ) -> Tuple[np.ndarray, int]:
         """
@@ -136,26 +137,32 @@ class SparkTTS:
             waveform: np.ndarray (float32)
             sample_rate: int
         """
-        pred_global_ids, pred_semantic_ids = self.generate_tokens(
-            text=text,
-            speaker_id=speaker_id,
-            temperature=temperature,
-            top_k=top_k,
-            top_p=top_p,
-            max_new_audio_tokens=max_new_audio_tokens,
-        )
-        wav = self.audio_tokenizer.detokenize(
-            pred_global_ids.to(self.device).squeeze(0),
-            pred_semantic_ids.to(self.device),
-        )
+        texts = text.split(".")
+        texts = [t.strip() for t in texts if len(t.strip()) > 0]
+        segments = []
+        for text in texts:
+            pred_global_ids, pred_semantic_ids = self.generate_tokens(
+                text=text,
+                speaker_id=speaker_id,
+                temperature=temperature,
+                top_k=top_k,
+                top_p=top_p,
+                max_new_audio_tokens=max_new_audio_tokens,
+            )
+            wav = self.audio_tokenizer.detokenize(
+                pred_global_ids.to(self.device).squeeze(0),
+                pred_semantic_ids.to(self.device),
+            )
+            segments.append(wav)
+        result_wav = np.concatenate(segments)
         if normalize:
             sys.path.append("Spark-TTS")
             from sparktts.utils.audio import audio_volume_normalize
 
-            wav = audio_volume_normalize(wav)
+            result_wav = audio_volume_normalize(result_wav)
         # Default Spark-TTS sample rate
-        sr = 16000
-        return wav, sr
+        sr = sample_rate
+        return result_wav, sr
 
     def save_wav(
         self,
