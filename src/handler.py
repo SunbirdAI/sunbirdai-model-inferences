@@ -239,6 +239,7 @@ class TaskHandler:
             raise ValueError("Missing text for TTS")
 
         speaker_id = job_input.get("speaker_id", 248)
+        sample_rate = job_input.get("sample_rate", 16000)
         temperature = job_input.get("temperature", 0.8)
         top_k = job_input.get("top_k", 50)
         top_p = job_input.get("top_p", 1.0)
@@ -253,6 +254,7 @@ class TaskHandler:
             top_k=top_k,
             top_p=top_p,
             max_new_audio_tokens=max_new_audio_tokens,
+            sample_rate=sample_rate,
             normalize=normalize,
         )
 

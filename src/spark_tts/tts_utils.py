@@ -199,6 +199,6 @@ if __name__ == "__main__":
         adapter_repo="jq/spark-tts-salt", adapter_filename="model.safetensors"
     )
     tts.save_wav(
-        args.text, args.output, normalize=not args.no_normalize, speaker_id=248
+        args.text, args.output, normalize=not args.no_normalize, speaker_id=248, sample_rate=16000
     )
     print(f"Saved: {args.output}")
