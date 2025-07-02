@@ -9,6 +9,8 @@ import torch
 from huggingface_hub import hf_hub_download, snapshot_download
 from unsloth import FastModel
 
+from text_chunker import chunk_text
+
 
 class SparkTTS:
     """
@@ -74,7 +76,16 @@ class SparkTTS:
             pred_semantic_ids: torch.Tensor
         """
         # Control prompt prefix for voice
-        prompt = f"<|task_tts|><|start_content|>{speaker_id}: {text}<|end_content|><|start_global_token|>"
+        text = f"{speaker_id}: {text}"
+        prompt = "".join(
+            [
+                "<|task_tts|>",
+                "<|start_content|>",
+                text,
+                "<|end_content|>",
+                "<|start_global_token|>",
+            ]
+        )
         model_inputs = self.tokenizer([prompt], return_tensors="pt").to(self.device)
         generated_ids = self.model.generate(
             **model_inputs,
@@ -86,9 +97,9 @@ class SparkTTS:
             eos_token_id=self.tokenizer.eos_token_id,  # Stop token
             pad_token_id=self.tokenizer.pad_token_id,  # Use models pad token id
         )
-        new_tokens = generated_ids[:, model_inputs.input_ids.shape[1] :]
+        generated_ids_trimmed = generated_ids[:, model_inputs.input_ids.shape[1] :]
         predicts_text = self.tokenizer.batch_decode(
-            new_tokens, skip_special_tokens=False
+            generated_ids_trimmed, skip_special_tokens=False
         )[0]
 
         # Extract semantic token IDs using regex
@@ -129,7 +140,7 @@ class SparkTTS:
         top_p: float = 1.0,
         max_new_audio_tokens: int = 2048,
         sample_rate: int = 16000,
-        normalize: bool = True,
+        normalize: bool = False,
     ) -> Tuple[np.ndarray, int]:
         """
         Convert text to speech waveform.
@@ -137,7 +148,7 @@ class SparkTTS:
             waveform: np.ndarray (float32)
             sample_rate: int
         """
-        texts = text.split(".")
+        texts = chunk_text(text, chunk_size=10)
         texts = [t.strip() for t in texts if len(t.strip()) > 0]
         segments = []
         for text in texts:
@@ -199,6 +210,10 @@ if __name__ == "__main__":
         adapter_repo="jq/spark-tts-salt", adapter_filename="model.safetensors"
     )
     tts.save_wav(
-        args.text, args.output, normalize=not args.no_normalize, speaker_id=248, sample_rate=16000
+        args.text,
+        args.output,
+        normalize=not args.no_normalize,
+        speaker_id=248,
+        sample_rate=16000,
     )
     print(f"Saved: {args.output}")

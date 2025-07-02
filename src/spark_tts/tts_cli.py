@@ -22,7 +22,13 @@ def tts(
 ):
     """Generate speech from text and save to WAV."""
     tts_engine = SparkTTS(adapter_repo=adapter_repo, adapter_filename=adapter_filename)
-    tts_engine.save_wav(text, output, normalize=not no_normalize, speaker_id=speaker_id, sample_rate=sample_rate)
+    tts_engine.save_wav(
+        text,
+        output,
+        normalize=not no_normalize,
+        speaker_id=speaker_id,
+        sample_rate=sample_rate,
+    )
     typer.echo(f"Saved WAV to {output}")
 
 

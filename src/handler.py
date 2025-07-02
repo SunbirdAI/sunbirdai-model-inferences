@@ -249,12 +249,12 @@ class TaskHandler:
         tts = SparkTTS()
         wav, sr = tts.text_to_speech(
             text,
-            speaker_id,
+            int(speaker_id),
             temperature=temperature,
             top_k=top_k,
             top_p=top_p,
             max_new_audio_tokens=max_new_audio_tokens,
-            sample_rate=sample_rate,
+            sample_rate=int(sample_rate),
             normalize=normalize,
         )
 
