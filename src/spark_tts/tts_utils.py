@@ -9,6 +9,13 @@ import torch
 from huggingface_hub import hf_hub_download, snapshot_download
 from unsloth import FastModel
 
+# Ensure the current directory is in sys.path for text_chunker import
+current_dir = os.path.dirname(os.path.realpath(__file__))
+if current_dir not in sys.path:
+    sys.path.append(current_dir)
+
+from text_chunker import chunk_text
+
 
 class SparkTTS:
     """
@@ -74,7 +81,16 @@ class SparkTTS:
             pred_semantic_ids: torch.Tensor
         """
         # Control prompt prefix for voice
-        prompt = f"<|task_tts|><|start_content|>{speaker_id}: {text}<|end_content|><|start_global_token|>"
+        text = f"{speaker_id}: {text}"
+        prompt = "".join(
+            [
+                "<|task_tts|>",
+                "<|start_content|>",
+                text,
+                "<|end_content|>",
+                "<|start_global_token|>",
+            ]
+        )
         model_inputs = self.tokenizer([prompt], return_tensors="pt").to(self.device)
         generated_ids = self.model.generate(
             **model_inputs,
@@ -86,9 +102,9 @@ class SparkTTS:
             eos_token_id=self.tokenizer.eos_token_id,  # Stop token
             pad_token_id=self.tokenizer.pad_token_id,  # Use models pad token id
         )
-        new_tokens = generated_ids[:, model_inputs.input_ids.shape[1] :]
+        generated_ids_trimmed = generated_ids[:, model_inputs.input_ids.shape[1] :]
         predicts_text = self.tokenizer.batch_decode(
-            new_tokens, skip_special_tokens=False
+            generated_ids_trimmed, skip_special_tokens=False
         )[0]
 
         # Extract semantic token IDs using regex
@@ -123,12 +139,13 @@ class SparkTTS:
     def text_to_speech(
         self,
         text: str,
-        speaker_id: int = 242,
+        speaker_id: int = 248,
         temperature: float = 0.8,
         top_k: int = 50,
         top_p: float = 1.0,
         max_new_audio_tokens: int = 2048,
-        normalize: bool = True,
+        sample_rate: int = 16000,
+        normalize: bool = False,
     ) -> Tuple[np.ndarray, int]:
         """
         Convert text to speech waveform.
@@ -136,26 +153,32 @@ class SparkTTS:
             waveform: np.ndarray (float32)
             sample_rate: int
         """
-        pred_global_ids, pred_semantic_ids = self.generate_tokens(
-            text=text,
-            speaker_id=speaker_id,
-            temperature=temperature,
-            top_k=top_k,
-            top_p=top_p,
-            max_new_audio_tokens=max_new_audio_tokens,
-        )
-        wav = self.audio_tokenizer.detokenize(
-            pred_global_ids.to(self.device).squeeze(0),
-            pred_semantic_ids.to(self.device),
-        )
+        texts = chunk_text(text, chunk_size=10)
+        texts = [t.strip() for t in texts if len(t.strip()) > 0]
+        segments = []
+        for text in texts:
+            pred_global_ids, pred_semantic_ids = self.generate_tokens(
+                text=text,
+                speaker_id=speaker_id,
+                temperature=temperature,
+                top_k=top_k,
+                top_p=top_p,
+                max_new_audio_tokens=max_new_audio_tokens,
+            )
+            wav = self.audio_tokenizer.detokenize(
+                pred_global_ids.to(self.device).squeeze(0),
+                pred_semantic_ids.to(self.device),
+            )
+            segments.append(wav)
+        result_wav = np.concatenate(segments)
         if normalize:
             sys.path.append("Spark-TTS")
             from sparktts.utils.audio import audio_volume_normalize
 
-            wav = audio_volume_normalize(wav)
+            result_wav = audio_volume_normalize(result_wav)
         # Default Spark-TTS sample rate
-        sr = 16000
-        return wav, sr
+        sr = sample_rate
+        return result_wav, sr
 
     def save_wav(
         self,
@@ -192,6 +215,10 @@ if __name__ == "__main__":
         adapter_repo="jq/spark-tts-salt", adapter_filename="model.safetensors"
     )
     tts.save_wav(
-        args.text, args.output, normalize=not args.no_normalize, speaker_id=248
+        args.text,
+        args.output,
+        normalize=not args.no_normalize,
+        speaker_id=248,
+        sample_rate=16000,
     )
     print(f"Saved: {args.output}")

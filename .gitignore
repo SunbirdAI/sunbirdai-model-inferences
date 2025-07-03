@@ -167,3 +167,5 @@ credentials.json
 
 Spark-TTS/
 Spark-TTS-0.5B/
+unsloth_compiled_cache/
+output*.wav
