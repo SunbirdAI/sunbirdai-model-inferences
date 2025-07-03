@@ -9,6 +9,11 @@ import torch
 from huggingface_hub import hf_hub_download, snapshot_download
 from unsloth import FastModel
 
+# Ensure the current directory is in sys.path for text_chunker import
+current_dir = os.path.dirname(os.path.realpath(__file__))
+if current_dir not in sys.path:
+    sys.path.append(current_dir)
+
 from text_chunker import chunk_text
 
 
