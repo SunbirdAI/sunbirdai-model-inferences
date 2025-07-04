@@ -1,0 +1,47 @@
+#!/usr/bin/env bash
+
+# Configurable variables
+DATACENTER="EU-RO-1"
+NETWORK_VOLUME_ID="ctnuimhg19"
+REMOTE_DIR="huggingface-cache/hub/"
+PROFILE="runpods3"
+ENDPOINT_URL="https://s3api-${DATACENTER}.runpod.io/"
+
+# Function to print usage
+usage() {
+    echo "Usage:"
+    echo "  $0 list"
+    echo "  $0 sync <local_directory>"
+    exit 1
+}
+
+# Check input arguments
+if [[ $# -lt 1 ]]; then
+    usage
+fi
+
+ACTION="$1"
+
+case "$ACTION" in
+    list)
+        echo "Listing S3 objects from s3://${NETWORK_VOLUME_ID}/${REMOTE_DIR}"
+        aws s3 ls --region "${DATACENTER}" --profile "${PROFILE}" \
+            --endpoint-url "${ENDPOINT_URL}" \
+            "s3://${NETWORK_VOLUME_ID}/${REMOTE_DIR}"
+        ;;
+    sync)
+        if [[ $# -ne 2 ]]; then
+            echo "Error: Missing directory argument for sync"
+            usage
+        fi
+        LOCAL_DIR="$2"
+        echo "Syncing ${LOCAL_DIR} to s3://${NETWORK_VOLUME_ID}/${REMOTE_DIR}"
+        aws s3 sync --region "${DATACENTER}" --profile "${PROFILE}" \
+            --endpoint-url "${ENDPOINT_URL}" "${LOCAL_DIR}" \
+            "s3://${NETWORK_VOLUME_ID}/${REMOTE_DIR}"
+        ;;
+    *)
+        echo "Error: Unknown action '$ACTION'"
+        usage
+        ;;
+esac

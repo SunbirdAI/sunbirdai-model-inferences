@@ -169,3 +169,5 @@ Spark-TTS/
 Spark-TTS-0.5B/
 unsloth_compiled_cache/
 output*.wav
+
+runpod_network_volume_s3_credentials.txt
