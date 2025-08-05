@@ -3,10 +3,13 @@ import logging
 import os
 import sys
 import time
+import builtins, typing
 
 import runpod
 import torch
 from dotenv import load_dotenv
+
+builtins.Any = typing.Any
 
 current_directory = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(current_directory)
@@ -256,6 +259,9 @@ class TaskHandler:
             max_new_audio_tokens=max_new_audio_tokens,
             sample_rate=int(sample_rate),
             normalize=normalize,
+        )
+        logging.info(
+            f"Wav audion and sample rate: {wav} {sr}"
         )
 
         # write WAV to buffer

@@ -3,11 +3,14 @@ import re
 import shutil
 import sys
 from typing import Optional, Tuple
+import builtins, typing
 
 import numpy as np
 import torch
 from huggingface_hub import hf_hub_download, snapshot_download
 from unsloth import FastModel
+
+builtins.Any = typing.Any
 
 # Ensure the current directory is in sys.path for text_chunker import
 current_dir = os.path.dirname(os.path.realpath(__file__))
