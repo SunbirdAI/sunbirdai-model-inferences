@@ -246,7 +246,7 @@ class TaskHandler:
         max_new_audio_tokens = job_input.get("max_new_audio_tokens", 2048)
         normalize = job_input.get("normalize", True)
 
-        tts = SparkTTS()
+        tts = SparkTTS(adapter_repo="jq/spark-tts-salt", adapter_filename="model.safetensors")
         wav, sr = tts.text_to_speech(
             text,
             int(speaker_id),
