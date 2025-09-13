@@ -3,10 +3,13 @@ import logging
 import os
 import sys
 import time
+import builtins, typing
 
 import runpod
 import torch
 from dotenv import load_dotenv
+
+builtins.Any = typing.Any
 
 current_directory = os.path.dirname(os.path.realpath(__file__))
 sys.path.append(current_directory)
@@ -246,7 +249,7 @@ class TaskHandler:
         max_new_audio_tokens = job_input.get("max_new_audio_tokens", 2048)
         normalize = job_input.get("normalize", True)
 
-        tts = SparkTTS()
+        tts = SparkTTS(adapter_repo="jq/spark-tts-salt", adapter_filename="model.safetensors")
         wav, sr = tts.text_to_speech(
             text,
             int(speaker_id),
@@ -256,6 +259,9 @@ class TaskHandler:
             max_new_audio_tokens=max_new_audio_tokens,
             sample_rate=int(sample_rate),
             normalize=normalize,
+        )
+        logging.info(
+            f"Wav audion and sample rate: {wav} {sr}"
         )
 
         # write WAV to buffer

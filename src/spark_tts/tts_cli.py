@@ -1,7 +1,10 @@
+import builtins, typing
 from typing import Optional
 
 import typer
 from tts_utils import SparkTTS
+
+builtins.Any = typing.Any
 
 cli = typer.Typer()
 
