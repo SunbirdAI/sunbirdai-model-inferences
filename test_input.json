@@ -1,13 +1,10 @@
 {
     "input": {
-        "task": "tts",
-        "text": "Kinyarwanda is spoken by more than 12 million people, yet high quality ASR systems remain scarce. This dataset and accompanying hackathon aim to: Accelerate speech to text research and open-source toolkits for Kinyarwanda. Provide diverse, real-world audio covering critical societal domains. Benchmark ASR systems under both supervised and semi-supervised settings. Support the development of digital public goods by releasing resources under open licenses, thereby enabling public institutions, developers, and researchers to build inclusive voice technologies. Strengthen the local AI and NLP ecosystem in Rwanda and across Africa by engaging academia, startups, and established companies in building language technologies. Promote linguistic equity by ensuring that native Kinyarwanda speakers can interact with technology in their own language.",
-        "speaker_id": 248,
-        "sample_rate": 14000,
-        "temperature": 0.8,
-        "top_k": 50,
-        "top_p": 1.0,
-        "max_new_audio_tokens": 2048,
-        "normalize": false
+        "task": "transcribe",
+        "target_lang": "eng",
+        "adapter": "eng",
+        "audio_file": "./content/shecenter_trailer.mp3",
+        "whisper": true,
+        "recognise_speakers": true
     }
 }

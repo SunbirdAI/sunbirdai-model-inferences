@@ -1,6 +1,6 @@
 # Base image -> https://github.com/runpod/containers/blob/main/official-templates/base/Dockerfile
 # DockerHub -> https://hub.docker.com/r/runpod/base/tags
-FROM runpod/base:0.6.3-cuda11.8.0
+FROM runpod/base:0.7.0-focal-cuda1241
 
 ENV RUNPOD_ENDPOINT_ID=yapuzewu3ebmzq
 ENV AUDIO_CONTENT_BUCKET_NAME=sb-api-audio-content-sb-gcp-project-01
@@ -19,8 +19,9 @@ RUN /bin/bash /setup.sh && \
 # Python dependencies
 COPY builder/requirements.txt /requirements.txt
 RUN git clone https://github.com/SparkAudio/Spark-TTS
-RUN python3.11 -m pip install --upgrade pip && \
-    python3.11 -m pip install --upgrade -r /requirements.txt --no-cache-dir && \
+RUN python3.13 -m pip install --upgrade pip && \
+    python3.13 -m pip install torch six && \
+    python3.13 -m pip install --upgrade -r /requirements.txt --no-cache-dir && \
     rm /requirements.txt
 
 # NOTE: The base image comes with multiple Python versions pre-installed.
@@ -32,4 +33,4 @@ ADD src .
 ADD content ./content
 ADD test_input.json .
 
-CMD python3.11 -u /handler.py
+CMD python3.13 -u /handler.py
