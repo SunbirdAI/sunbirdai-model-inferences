@@ -6,7 +6,8 @@
 # To learn more, see https://pip.pypa.io/en/stable/reference/requirements-file-format/
 
 runpod==1.7.13
-xformers==0.0.30
+torch
+xformers
 transformers==4.52.4
 # kenlm
 bitsandbytes
@@ -14,7 +15,6 @@ accelerate
 sentencepiece
 sacremoses
 wandb
-torch
 requests
 pyctcdecode
 python-dotenv
@@ -24,8 +24,8 @@ jiwer
 librosa
 Werkzeug
 # unsloth @ git+https://github.com/unslothai/unsloth.git
-unsloth==2025.6.5
-unsloth_zoo==2025.6.4
+unsloth==2025.9.4
+unsloth_zoo==2025.9.5
 trl
 peft
 Werkzeug
@@ -33,6 +33,7 @@ pyannote.audio
 onnxruntime
 numpy==1.26.4
 soundfile
+six==1.17.0
 datasets
 pydub==0.25.1
 pydub-stubs==0.25.1.1
