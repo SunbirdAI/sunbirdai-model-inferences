@@ -2,4 +2,13 @@
 
 set -e
 
-docker run --rm -p 8088:8088 sunbirddocker/sunbirdai-model-inferences:v2.3.11
+export $(grep -v '^#' .env | xargs)
+
+docker run --rm --gpus all -p 8088:8088 \
+    -e HF_TOKEN \
+    -e RUNPOD_ENDPOINT_ID \
+    -e AUDIO_CONTENT_BUCKET_NAME \
+    -e GCP_CREDENTIALS \
+    -e RUNPOD_API_KEY \
+    -e SPARK_TTS_RUNPOD_ENDPOINT_ID \
+    sunbirddocker/sunbirdai-model-inferences:v2.3.12
