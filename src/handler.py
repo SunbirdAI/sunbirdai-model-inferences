@@ -1,10 +1,17 @@
+import builtins
 import datetime
 import logging
 import os
 import sys
 import time
-import builtins, typing
+import typing
+import base64
+import io
+import tempfile
+import uuid
 
+import soundfile as sf
+from pydub import AudioSegment
 import runpod
 import torch
 from dotenv import load_dotenv
@@ -224,16 +231,6 @@ class TaskHandler:
         return {"detected_language": detected_language}
 
     def tts(self, job_input):
-        import base64
-        import datetime
-        import io
-        import os
-        import tempfile
-        import uuid
-
-        import soundfile as sf
-        from pydub import AudioSegment
-
         from gcp_storage_utils import upload_audio_file_to_gcs
         from spark_tts.tts_utils import SparkTTS
 
@@ -243,26 +240,19 @@ class TaskHandler:
 
         speaker_id = job_input.get("speaker_id", 248)
         sample_rate = job_input.get("sample_rate", 16000)
-        temperature = job_input.get("temperature", 0.8)
-        top_k = job_input.get("top_k", 50)
-        top_p = job_input.get("top_p", 1.0)
-        max_new_audio_tokens = job_input.get("max_new_audio_tokens", 2048)
-        normalize = job_input.get("normalize", True)
+        temperature = job_input.get("temperature", 0.7)
+        max_new_audio_tokens = job_input.get("max_new_audio_tokens", 2000)
 
-        tts = SparkTTS(adapter_repo="jq/spark-tts-salt", adapter_filename="model.safetensors")
+        tts = SparkTTS()
         wav, sr = tts.text_to_speech(
             text,
             int(speaker_id),
             temperature=temperature,
-            top_k=top_k,
-            top_p=top_p,
             max_new_audio_tokens=max_new_audio_tokens,
             sample_rate=int(sample_rate),
-            normalize=normalize,
         )
-        logging.info(
-            f"Wav audion and sample rate: {wav} {sr}"
-        )
+
+        logging.info(f"Wav audion and sample rate: {wav} {sr}")
 
         # write WAV to buffer
         buf = io.BytesIO()
@@ -297,7 +287,7 @@ class TaskHandler:
         return {
             "audio_url": signed_url,
             "blob": blob_name,
-            "wav_base64": b64,
+            # "wav_base64": b64,
             "sample_rate": sr,
         }
 
