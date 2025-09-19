@@ -11,4 +11,4 @@ docker run --rm --gpus all -p 8088:8088 \
     -e GCP_CREDENTIALS \
     -e RUNPOD_API_KEY \
     -e SPARK_TTS_RUNPOD_ENDPOINT_ID \
-    sunbirddocker/sunbirdai-model-inferences:v2.3.12
+    sunbirddocker/sunbirdai-model-inferences:v2.3.13

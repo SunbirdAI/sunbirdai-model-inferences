@@ -1,10 +1,8 @@
 {
     "input": {
-        "task": "transcribe",
-        "target_lang": "eng",
-        "adapter": "eng",
-        "audio_file": "./content/shecenter_trailer.mp3",
-        "whisper": true,
-        "recognise_speakers": true
+        "task": "translate",
+        "source_language": "lug",
+        "target_language": "eng",
+        "text": "Okugulu kwange kwamenyese."
     }
 }

@@ -13,6 +13,7 @@ try:
     device = torch.device("cuda")
 except Exception:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model.to(device)
 
 
 def make_response(response):
