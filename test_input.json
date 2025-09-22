@@ -1,10 +1,8 @@
 {
     "input": {
-        "task": "transcribe",
-        "target_lang": "eng",
-        "adapter": "eng",
-        "audio_file": "./content/shecenter_trailer.mp3",
-        "whisper": true,
-        "recognise_speakers": true
+        "task": "translate",
+        "source_language": "eng",
+        "target_language": "lug",
+        "text": "Randy Bruce Traywick (born May 4, 1959), known professionally as Randy Travis, is an American country and gospel music singer and songwriter, as well as a film and television actor. Active since 1979, he has recorded over 20 studio albums and charted over 50 singles on the Billboard Hot Country Songs charts, including sixteen that reached the number-one position. Travis's commercial success began in the mid-1980s with the release of his album Storms of Life, which was certified triple-platinum by the Recording Industry Association of America. He followed up his major-label debut with a string of platinum and multi-platinum albums, but his commercial success declined throughout the 1990s. In 1997, he left Warner Bros. Records for DreamWorks Records; he signed to Word Records for a series of gospel albums beginning in 2000 before transferring back to Warner at the end of the 21st century's first decade. His musical accolades include seven Grammy Awards, eleven ACM Awards, eight Dove Awards, a star on the Hollywood Walk of Fame, and a 2016 induction into the Country Music Hall of Fame. Major songs of his include \"On the Other Hand\", \"Forever and Ever, Amen\", \"I Told You So\", \"Hard Rock Bottom of Your Heart\", and \"Three Wooden Crosses\"."
     }
 }

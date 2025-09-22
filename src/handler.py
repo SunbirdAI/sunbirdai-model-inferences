@@ -1,20 +1,20 @@
+import base64
 import builtins
 import datetime
+import io
 import logging
 import os
 import sys
+import tempfile
 import time
 import typing
-import base64
-import io
-import tempfile
 import uuid
 
-import soundfile as sf
-from pydub import AudioSegment
 import runpod
+import soundfile as sf
 import torch
 from dotenv import load_dotenv
+from pydub import AudioSegment
 
 builtins.Any = typing.Any
 
@@ -64,7 +64,7 @@ class TaskHandler:
 
         start_time = time.time()
         if use_whisper:
-            model_id = "jq/whisper-large-v2-salt-plus-xog-myx-kin-swa-sample-packing"
+            model_id = "jq/whisper-large-v2-salt-plus-xog-myx-kin-swa-sample-packing"  # "Sunbird/asr-whisper-large-v3-salt"
             whisper = WhisperASR(model_id)
             processor, model = whisper.setup_model()
             language_code = whisper.get_language_code(target_lang, processor)
@@ -113,7 +113,13 @@ class TaskHandler:
         end_time = time.time()
         execution_time = end_time - start_time
 
-        response["audio_transcription"] = transcription_text
+        response = {
+            "model_id": model_id,
+            "language": target_lang,
+            "audio_transcription": transcription_text,
+            # "transcription_details": transcription,
+            "execution_time_seconds": execution_time,
+        }
 
         if recognise_speakers:
             hf_token = os.getenv("HF_TOKEN")
@@ -131,11 +137,12 @@ class TaskHandler:
         return response
 
     def translate(self, job_input):
-        from translate_utils import process_and_translate_text
+        from translation_utils import process_and_translate_text
 
         source_language = job_input.get("source_language")
         target_language = job_input.get("target_language")
         text_to_translate = job_input.get("text")
+        task = job_input.get("task")
 
         if not (source_language and target_language and text_to_translate):
             raise ValueError("Missing required translation parameters")
@@ -143,7 +150,13 @@ class TaskHandler:
         translated_text = process_and_translate_text(
             text_to_translate, source_language, target_language
         )
-        return {"text": text_to_translate, "translated_text": translated_text}
+        return {
+            "task": task,
+            "source_language": source_language,
+            "text": text_to_translate,
+            "target_language": target_language,
+            "translated_text": translated_text,
+        }
 
     def asr_summarise(self, job_input):
         from asr_summarization_utils import process_and_correct_text
