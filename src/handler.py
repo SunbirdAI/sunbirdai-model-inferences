@@ -64,7 +64,7 @@ class TaskHandler:
 
         start_time = time.time()
         if use_whisper:
-            model_id = "jq/whisper-large-v2-salt-plus-xog-myx-kin-swa-sample-packing"
+            model_id = "jq/whisper-large-v2-salt-plus-xog-myx-kin-swa-sample-packing"  # "Sunbird/asr-whisper-large-v3-salt"
             whisper = WhisperASR(model_id)
             processor, model = whisper.setup_model()
             language_code = whisper.get_language_code(target_lang, processor)
@@ -113,7 +113,13 @@ class TaskHandler:
         end_time = time.time()
         execution_time = end_time - start_time
 
-        response["audio_transcription"] = transcription_text
+        response = {
+            "model_id": model_id,
+            "language": target_lang,
+            "audio_transcription": transcription_text,
+            # "transcription_details": transcription,
+            "execution_time_seconds": execution_time,
+        }
 
         if recognise_speakers:
             hf_token = os.getenv("HF_TOKEN")
@@ -131,7 +137,7 @@ class TaskHandler:
         return response
 
     def translate(self, job_input):
-        from translate_utils import process_and_translate_text
+        from translation_utils import process_and_translate_text
 
         source_language = job_input.get("source_language")
         target_language = job_input.get("target_language")

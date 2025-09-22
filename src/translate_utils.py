@@ -1,3 +1,5 @@
+import re
+
 import torch
 import transformers
 
@@ -7,13 +9,13 @@ tokenizer = transformers.NllbTokenizer.from_pretrained(
 model = transformers.M2M100ForConditionalGeneration.from_pretrained(
     "jq/nllb-1.3B-many-to-many-pronouncorrection-charaug"
 )
-import re
 
 try:
     device = torch.device("cuda")
 except Exception:
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device)
+model.eval()  # Set to evaluation mode
 
 
 def make_response(response):
@@ -32,12 +34,13 @@ def translate(text, source_language, target_language):
 
     inputs = tokenizer(text, return_tensors="pt").to(device)
     inputs["input_ids"][0][0] = _language_codes[source_language]
-    translated_tokens = model.to(device).generate(
-        **inputs,
-        forced_bos_token_id=_language_codes[target_language],
-        max_length=100,
-        num_beams=5,
-    )
+    with torch.no_grad():  # Disable gradients for inference
+        translated_tokens = model.to(device).generate(
+            **inputs,
+            forced_bos_token_id=_language_codes[target_language],
+            max_length=100,
+            num_beams=5,
+        )
 
     result = tokenizer.batch_decode(translated_tokens, skip_special_tokens=True)[0]
     return result
