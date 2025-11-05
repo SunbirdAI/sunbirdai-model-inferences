@@ -21,6 +21,7 @@ COPY builder/requirements.txt /requirements.txt
 RUN git clone https://github.com/SparkAudio/Spark-TTS
 RUN python3.13 -m pip install --upgrade pip && \
     python3.13 -m pip install torch six && \
+    python3.13 -m pip install kenlm && \
     python3.13 -m pip install --upgrade -r /requirements.txt --no-cache-dir && \
     rm /requirements.txt
 

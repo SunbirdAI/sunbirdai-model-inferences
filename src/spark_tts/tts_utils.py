@@ -19,7 +19,7 @@ current_dir = os.path.dirname(os.path.realpath(__file__))
 if current_dir not in sys.path:
     sys.path.append(current_dir)
 
-from text_chunker import chunk_text
+from text_chunker import chunk_text_simple
 
 load_dotenv()
 
@@ -127,6 +127,83 @@ class SparkTTS:
 
         return pred_semantic_ids, pred_global_ids
 
+    def generate_speech_segment_with_retry(
+        self,
+        text: str,
+        speaker_id: int = 248,
+        temperature: float = 0.7,
+        max_new_audio_tokens: int = 2000,
+        max_retries: int = 3,
+    ) -> Optional[np.ndarray]:
+        """
+        Generate a single speech segment with retry logic.
+        
+        This function will retry up to max_retries times if there's a RuntimeError
+        during token generation or detokenization (typically dimension mismatches).
+        
+        Args:
+            text: Input text to synthesize
+            speaker_id: Speaker ID
+            temperature: Sampling temperature
+            max_new_audio_tokens: Maximum tokens to generate
+            max_retries: Maximum number of retry attempts
+            
+        Returns:
+            wav_np: Audio waveform as numpy array, or None if all retries failed
+        """
+        for attempt in range(max_retries):
+            try:
+                # Generate tokens
+                pred_semantic_ids, pred_global_ids = self.generate_speech_from_text(
+                    text=text,
+                    speaker_id=speaker_id,
+                    temperature=temperature,
+                    max_new_audio_tokens=max_new_audio_tokens,
+                )
+                
+                # Log token shapes for debugging
+                print(f"Attempt {attempt + 1}: semantic shape={pred_semantic_ids.shape}, "
+                      f"global shape={pred_global_ids.shape}")
+                
+                # Detokenize to waveform
+                wav_np = self.audio_tokenizer.detokenize(
+                    pred_global_ids.to("cuda"), pred_semantic_ids.to("cuda")
+                )
+                
+                # Success!
+                return wav_np
+                
+            except RuntimeError as e:
+                error_msg = str(e)
+                print(f"⚠️  Attempt {attempt + 1}/{max_retries} failed for text chunk: '{text[:50]}...'")
+                print(f"   Error: {error_msg}")
+                
+                # Check if it's the dimension mismatch error we're expecting
+                if "cannot be multiplied" in error_msg or "shape" in error_msg.lower():
+                    if attempt < max_retries - 1:
+                        print(f"   Retrying with slightly different temperature...")
+                        # Slightly vary temperature to get different generation
+                        temperature = temperature + np.random.uniform(-0.05, 0.05)
+                        temperature = float(np.clip(temperature, 0.1, 1.0))
+                        time.sleep(0.5)  # Small delay before retry
+                    else:
+                        print(f"   ❌ All {max_retries} attempts failed. Skipping this chunk.")
+                        return None
+                else:
+                    # Different error, re-raise
+                    raise
+                    
+            except ValueError as e:
+                print(f"⚠️  ValueError on attempt {attempt + 1}: {e}")
+                if attempt < max_retries - 1:
+                    print(f"   Retrying...")
+                    time.sleep(0.5)
+                else:
+                    print(f"   ❌ All {max_retries} attempts failed. Skipping this chunk.")
+                    return None
+        
+        return None
+
     def get_speech_segments(
         self,
         text_chunks: List[str],
@@ -157,29 +234,51 @@ class SparkTTS:
         self,
         text: str,
         speaker_id: int = 248,
-        temperature: float = 0.8,
+        temperature: float = 0.7,
         max_new_audio_tokens: int = 2048,
         sample_rate: int = 16000,
+        max_retries: int = 3,
     ) -> Tuple[np.ndarray, int]:
         """
-        Convert text to speech waveform.
+        Convert text to speech waveform with retry logic.
+        
+        Args:
+            text: Input text to synthesize
+            speaker_id: Speaker ID
+            temperature: Sampling temperature
+            max_new_audio_tokens: Maximum tokens per chunk
+            sample_rate: Output sample rate
+            max_retries: Maximum retry attempts per chunk
+            
         Returns:
-            waveform: np.ndarray (float32)
-            sample_rate: int
+            result_wav: Concatenated audio waveform (np.ndarray)
+            sr: Sample rate (int)
         """
-        texts = chunk_text(text, chunk_size=10)
+        # Chunk the text into sentences
+        texts = chunk_text_simple(text)
+        # texts = chunk_text_with_count(text, sentences_per_chunk=3)
+        # texts = chunk_text(text, max_chunk_size=500)
         texts = [t.strip() for t in texts if len(t.strip()) > 0]
+        
+        print(f"\n🎙️  Starting TTS conversion for {len(texts)} chunks...")
+        
+        # Generate speech segments with retry logic
         speech_segments = self.get_speech_segments(
             text_chunks=texts,
             speaker_id=speaker_id,
             temperature=temperature,
             max_new_audio_tokens=max_new_audio_tokens,
         )
-        result_wav = np.concatenate(speech_segments)
-
-        # Default Spark-TTS sample rate
-        sr = sample_rate
-        return result_wav, sr
+        
+        # Concatenate all segments
+        if speech_segments:
+            result_wav = np.concatenate(speech_segments)
+            print(f"\n✅ TTS conversion completed! Total duration: {len(result_wav)/sample_rate:.2f}s")
+        else:
+            print("\n⚠️  No speech segments generated. Returning silence.")
+            result_wav = np.zeros(sample_rate, dtype=np.float32)  # 1 second of silence
+        
+        return result_wav, sample_rate
 
     def save_wav(
         self,

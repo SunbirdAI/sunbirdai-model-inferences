@@ -8,7 +8,7 @@
 runpod==1.7.13
 torch
 xformers
-transformers==4.52.4
+transformers==4.57.1
 # kenlm
 bitsandbytes
 accelerate
@@ -22,16 +22,17 @@ pandas
 google-cloud-storage
 jiwer
 librosa
+numba @ git+https://github.com/numba/numba.git
 Werkzeug
 # unsloth @ git+https://github.com/unslothai/unsloth.git
-unsloth==2025.9.4
-unsloth_zoo==2025.9.5
+unsloth==2025.11.1
+unsloth_zoo==2025.11.1
 trl
 peft
 Werkzeug
 pyannote.audio
-onnxruntime
-numpy==1.26.4
+onnxruntime==1.23.2
+numpy
 soundfile
 six==1.17.0
 datasets
@@ -43,3 +44,4 @@ omegaconf
 einx
 einops
 huggingface-hub
+flash-attn
