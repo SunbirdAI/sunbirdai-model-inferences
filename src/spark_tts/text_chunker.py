@@ -11,87 +11,113 @@ from typing import List
 __all__ = ["chunk_text"]
 
 
-def chunk_text(text: str, chunk_size: int) -> List[str]:
+def chunk_text(text: str, max_chunk_size: int = 500) -> List[str]:
     """
-    Split `text` into chunks of up to `chunk_size` tokens, preserving punctuation,
-    while treating apostrophes as part of word tokens.
-
-    Tokens are defined as words (alphanumeric sequences plus apostrophes) or standalone punctuation marks.
-    When reconstructing chunks, punctuation attaches directly to the preceding word without extra spaces.
-
+    Split text into chunks based on sentence boundaries (periods, exclamation marks, question marks).
+    
+    This approach is ideal for TTS as it:
+    - Preserves natural sentence flow and intonation
+    - Avoids cutting off mid-sentence
+    - Groups multiple sentences together when they're short
+    
     Args:
         text: The input string to chunk.
-        chunk_size: Maximum number of tokens per chunk.
-
+        max_chunk_size: Maximum character length per chunk (soft limit). 
+                       Sentences won't be split even if they exceed this.
+    
     Returns:
-        A list of text chunks.
+        A list of text chunks, each containing one or more complete sentences.
     """
-    # Tokenize: words including apostrophes, or any other non-word, non-space character
-    tokens = re.findall(r"[\w']+|[^\w\s]", text, flags=re.UNICODE)
+    # Split on sentence-ending punctuation while preserving the punctuation
+    # This regex splits on . ! ? followed by whitespace or end of string
+    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+    
     chunks: List[str] = []
-    current: List[str] = []
-
-    for tok in tokens:
-        current.append(tok)
-        if len(current) >= chunk_size:
-            chunks.append(_join_tokens(current))
-            current = []
-
-    if current:
-        chunks.append(_join_tokens(current))
-
+    current_chunk: List[str] = []
+    current_length = 0
+    
+    for sentence in sentences:
+        sentence = sentence.strip()
+        if not sentence:
+            continue
+        
+        sentence_length = len(sentence)
+        
+        # If adding this sentence would exceed max_chunk_size and we already have content,
+        # save the current chunk and start a new one
+        if current_chunk and (current_length + sentence_length + 1) > max_chunk_size:
+            chunks.append(' '.join(current_chunk))
+            current_chunk = []
+            current_length = 0
+        
+        # Add sentence to current chunk
+        current_chunk.append(sentence)
+        current_length += sentence_length + 1  # +1 for space
+    
+    # Don't forget the last chunk
+    if current_chunk:
+        chunks.append(' '.join(current_chunk))
+    
     return chunks
 
 
-def _join_tokens(tokens: List[str]) -> str:
+def chunk_text_simple(text: str) -> List[str]:
     """
-    Reassemble a list of tokens into a text chunk, attaching punctuation
-    directly to the preceding word.
-
+    Split text into individual sentences.
+    
+    Use this for maximum control in TTS - one sentence per chunk.
+    
     Args:
-        tokens: List of token strings.
-
+        text: The input string to chunk.
+    
     Returns:
-        The joined text string.
+        A list of sentences.
     """
-    result = ""
-    for tok in tokens:
-        # treat punctuation except apostrophe as attach-to-previous
-        if re.fullmatch(r"[^\w\s']", tok):
-            result += tok
-        else:
-            if result:
-                result += " "
-            result += tok
-    return result
+    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+    return [s.strip() for s in sentences if s.strip()]
 
 
-# Example usage of __all__ and chunk_text:
-# ----------------------------------------
-# When imported with `from text_chunker import *`, only chunk_text is imported:
-#
-#   >>> from text_chunker import *
-#   >>> chunk_text("Hello, world! It's me.", 3)
-#   ['Hello,', 'world!', "It's", 'me.']
-#
-# Direct import also works:
-#
-#   >>> import text_chunker
-#   >>> text_chunker.chunk_text("Don't split contractions.", 2)
-#   ["Don't", 'split', 'contractions.']
+def chunk_text_with_count(text: str, sentences_per_chunk: int = 3) -> List[str]:
+    """
+    Split text into chunks containing a specific number of sentences.
+    
+    Args:
+        text: The input string to chunk.
+        sentences_per_chunk: Number of sentences to include in each chunk.
+    
+    Returns:
+        A list of text chunks.
+    """
+    sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+    sentences = [s.strip() for s in sentences if s.strip()]
+    
+    chunks: List[str] = []
+    
+    for i in range(0, len(sentences), sentences_per_chunk):
+        chunk = ' '.join(sentences[i:i + sentences_per_chunk])
+        chunks.append(chunk)
+    
+    return chunks
 
 
+# Example usage and testing
 if __name__ == "__main__":
-    sample = (
-        "Kinyarwanda is spoken by more than 12 million people, yet high quality ASR systems remain scarce. "
-        "This dataset and accompanying hackathon aim to: Accelerate speech to text research and open-source "
-        "toolkits for Kinyarwanda. Provide diverse, real-world audio covering critical societal domains. "
-        "Benchmark ASR systems under both supervised and semi-supervised settings. Support the development "
-        "of digital public goods by releasing resources under open licenses, thereby enabling public "
-        "institutions, developers, and researchers to build inclusive voice technologies. Strengthen the "
-        "local AI and NLP ecosystem in Rwanda and across Africa by engaging academia, startups, and "
-        "established companies in building language technologies. Promote linguistic equity by ensuring "
-        "that native Kinyarwanda speakers can interact with technology in their own language."
-    )
-    for i, chunk in enumerate(chunk_text(sample, chunk_size=12), 1):
-        print(f"--- Chunk {i} ---\n{chunk}\n")
+    sample_text = """Hello, I'm Prosi Nafula. I am a nurse who takes care of many people who have cancer and who have questions about their illness and what to expect. There are many types of cancer. The type of cancer you have is named after the place where it started. For example, if cancer starts in the breast then it is called breast cancer."""
+    
+    print("=== Default chunking (by sentence boundaries, max 200 chars) ===")
+    chunks = chunk_text(sample_text, max_chunk_size=200)
+    for i, chunk in enumerate(chunks, 1):
+        print(f"\nChunk {i} ({len(chunk)} chars):")
+        print(chunk)
+    
+    print("\n\n=== Simple chunking (one sentence per chunk) ===")
+    chunks = chunk_text_simple(sample_text)
+    for i, chunk in enumerate(chunks, 1):
+        print(f"\nSentence {i}:")
+        print(chunk)
+    
+    print("\n\n=== Fixed sentence count (2 sentences per chunk) ===")
+    chunks = chunk_text_with_count(sample_text, sentences_per_chunk=2)
+    for i, chunk in enumerate(chunks, 1):
+        print(f"\nChunk {i}:")
+        print(chunk)

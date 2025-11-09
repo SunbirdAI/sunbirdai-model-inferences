@@ -123,6 +123,7 @@ class TaskHandler:
 
         if recognise_speakers:
             hf_token = os.getenv("HF_TOKEN")
+            print(f"HF Token: {hf_token}")
             diarization_output = process_audio_diarization(
                 audio_file, hf_token, transcription, self.device
             )
