@@ -44,4 +44,4 @@ omegaconf
 einx
 einops
 huggingface-hub
-flash-attn
+# flash-attn

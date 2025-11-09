@@ -1,0 +1,60 @@
+# General Configuration
+aws_region = "us-east-1"
+
+common_tags = {
+  Project     = "ML-Inference"
+  Environment = "Development"
+  ManagedBy   = "Terraform"
+}
+
+# Security Group Configuration
+security_group_name        = "launch-wizard-8"
+security_group_description = "Security group for inference test server"
+vpc_id                     = "vpc-92dd37ef"
+
+# Customize ingress rules as needed
+# ingress_rules = [
+#   {
+#     from_port   = 22
+#     to_port     = 22
+#     protocol    = "tcp"
+#     cidr_blocks = ["YOUR_IP/32"]  # Restrict SSH to your IP for better security
+#     description = "SSH access from my IP"
+#   },
+#   {
+#     from_port   = 443
+#     to_port     = 443
+#     protocol    = "tcp"
+#     cidr_blocks = ["0.0.0.0/0"]
+#     description = "HTTPS access"
+#   },
+#   {
+#     from_port   = 80
+#     to_port     = 80
+#     protocol    = "tcp"
+#     cidr_blocks = ["0.0.0.0/0"]
+#     description = "HTTP access"
+#   }
+# ]
+
+# EC2 Instance Configuration
+instance_name      = "inference-test-server"
+ami_id             = "ami-0157af9aea2eef346"  # Amazon Linux 2023 GPU AMI
+instance_type      = "g4dn.4xlarge"
+key_name           = "nwtbootcampkey-pem"
+root_volume_size   = 200
+root_volume_type   = "gp3"
+root_volume_iops   = 3000
+root_volume_throughput = 125
+root_volume_encrypted  = false
+associate_public_ip    = true
+
+# Metadata Options
+metadata_http_tokens = "required"  # IMDSv2 required for better security
+metadata_hop_limit   = 2
+
+# DNS Options
+enable_dns_hostnames = true
+
+# GPU Setup (Docker, CUDA, NVIDIA drivers)
+enable_gpu_setup = true  # Set to false to skip automatic GPU setup

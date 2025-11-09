@@ -19,10 +19,9 @@ RUN /bin/bash /setup.sh && \
 # Python dependencies
 COPY builder/requirements.txt /requirements.txt
 RUN git clone https://github.com/SparkAudio/Spark-TTS
-RUN python3.13 -m pip install --upgrade pip && \
-    python3.13 -m pip install torch six && \
-    python3.13 -m pip install kenlm && \
-    python3.13 -m pip install --upgrade -r /requirements.txt --no-cache-dir && \
+RUN python3.12 -m pip install --upgrade pip && \
+    python3.12 -m pip install torch six kenlm && \
+    python3.12 -m pip install --upgrade -r /requirements.txt --no-cache-dir && \
     rm /requirements.txt
 
 # NOTE: The base image comes with multiple Python versions pre-installed.
@@ -34,4 +33,4 @@ ADD src .
 ADD content ./content
 ADD test_input.json .
 
-CMD python3.13 -u /handler.py
+CMD python3.12 -u /handler.py
