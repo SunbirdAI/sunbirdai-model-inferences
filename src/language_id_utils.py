@@ -6,13 +6,11 @@ from transformers import (
     AutoTokenizer,
 )
 
-tokenizer = AutoTokenizer.from_pretrained("yigagilbert/salt_language_ID")
-model = AutoModelForSeq2SeqLM.from_pretrained("yigagilbert/salt_language_ID")
 classification_tokenizer = AutoTokenizer.from_pretrained(
-    "yigagilbert/salt_language_Classification"
+    "Sunbird/sunflower_language_classification"
 )
 classification_model = AutoModelForSequenceClassification.from_pretrained(
-    "yigagilbert/salt_language_Classification"
+    "Sunbird/sunflower_language_classification"
 )
 
 # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -28,10 +26,10 @@ def predict(text, device):
 
     Args:
         text (str): The input text to perform inference on.
-        device (torch.device): The device (CPU or GPU) to run the model on.
+        device (torch.device): The device to run the model on.
 
     Returns:
-        dict: A dictionary where keys are the labels ("eng", "lug", "ach", "teo", "lgg", "nyn")
+        dict: A dictionary where keys are the labels (e.g., "eng", "lug", "ach", "teo", "lgg", "nyn")
               and values are the corresponding probabilities as floats.
 
     Example:
@@ -40,9 +38,10 @@ def predict(text, device):
         {'eng': 0.2, 'lug': 0.1, 'ach': 0.4, 'teo': 0.1, 'lgg': 0.15, 'nyn': 0.05}
 
     Note:
-        - This function assumes that the `tokenizer` and `model` are already defined
+        - This function assumes that the `classification_tokenizer` and `classification_model` are already defined
           and properly set up in the global scope.
         - The `torch` library is required for tensor operations.
+        - The `device` is automatically handled within the function.
     """
     classification_model.to(device)
 
@@ -55,11 +54,17 @@ def predict(text, device):
     logits = outputs.logits
     probabilities = torch.nn.functional.softmax(logits, dim=-1)[0]
 
-    # Map labels to their respective probabilities
-    label_mapping = {0: "eng", 1: "lug", 2: "ach", 3: "teo", 4: "lgg", 5: "nyn"}
-    result = {
+    # Map labels to their respective probabilities using classification_model.config.id2label
+    label_mapping = classification_model.config.id2label
+
+    # Get all probabilities with their labels
+    all_predictions = {
         label_mapping[i]: float(probability)
         for i, probability in enumerate(probabilities)
     }
 
-    return result
+    # Sort predictions by probability in descending order and take the top 6
+    sorted_predictions = sorted(all_predictions.items(), key=lambda item: item[1], reverse=True)
+    top_6_predictions = dict(sorted_predictions[:6])
+
+    return top_6_predictions
