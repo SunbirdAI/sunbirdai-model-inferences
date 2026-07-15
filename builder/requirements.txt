@@ -22,7 +22,8 @@ pandas
 google-cloud-storage
 jiwer
 librosa
-numba @ git+https://github.com/numba/numba.git
+# numba @ git+https://github.com/numba/numba.git
+numba==0.61.2
 Werkzeug
 # unsloth @ git+https://github.com/unslothai/unsloth.git
 unsloth==2025.11.1
