@@ -184,21 +184,28 @@ class TaskHandler:
         }
 
     def auto_detect_language(self, job_input):
-        from language_id_utils import model as language_id_model
-        from language_id_utils import tokenizer as language_id_tokenizer
+        """Most likely language of `text`, as {"language": code}.
+
+        Backed by the same classifier as `language_classify` — the previous
+        seq2seq model (yigagilbert/salt_language_ID) was removed when the
+        sunflower classifier landed, leaving this task importing names that no
+        longer exist. Kept as a compatibility alias so existing callers keep
+        working; new callers should prefer `language_classify`, which also
+        returns the probabilities.
+        """
+        from language_id_utils import predict as classify_predict
 
         text = job_input.get("text")
 
         if not text:
             raise ValueError("Missing text for language detection")
 
-        inputs = language_id_tokenizer(text.lower(), return_tensors="pt").to(
-            self.device
-        )
-        output = language_id_model.to(self.device).generate(**inputs, max_new_tokens=5)
-        result = language_id_tokenizer.batch_decode(output, skip_special_tokens=True)[0]
+        predictions = classify_predict(text, self.device)
+        if not predictions:
+            return {"language": "unknown"}
 
-        return {"language": result}
+        language = max(predictions, key=predictions.get)
+        return {"language": language}
 
     def language_classify(self, job_input):
         from language_id_utils import predict as classify_predict
