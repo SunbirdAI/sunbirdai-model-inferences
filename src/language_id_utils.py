@@ -2,26 +2,26 @@ import numpy as np
 import torch
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-CLASSIFICATION_MODEL_NAME = "Sunbird/sunflower_language_classification"
+CLASSIFICATION_MODEL_NAME = "Sunbird/sunflower_language_classification_v2"
 
-# `extra_special_tokens` is passed explicitly to override the value in the
-# model repo's tokenizer_config.json, where it is a JSON *array* of the 100
-# <extra_id_N> sentinel tokens. transformers expects a mapping and calls
-# `.keys()` on it (SpecialTokensMixin._set_model_specific_special_tokens), so
-# loading without this override fails with:
-#     AttributeError: 'list' object has no attribute 'keys'
-# The sentinels are already covered by `extra_ids` in the same config, so an
-# empty mapping loses nothing. The proper fix is to correct (or drop) that
-# field in the model repo; this keeps the worker running until then.
+# use_fast=False is mandatory: the fast-tokenizer conversion drops this
+# model's SentencePiece byte_fallback and reintroduces <unk> on scripts like
+# Amharic (0.47% vs 0.00% with the slow tokenizer), which is the exact
+# short-text regression v2 was retrained to fix.
 classification_tokenizer = AutoTokenizer.from_pretrained(
     CLASSIFICATION_MODEL_NAME,
-    extra_special_tokens={},
+    use_fast=False,
 )
 classification_model = AutoModelForSequenceClassification.from_pretrained(
     CLASSIFICATION_MODEL_NAME
 )
 
 # device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+
+def _normalize_text(text: str) -> str:
+    """Lowercase and collapse whitespace, exactly as v2 was trained on."""
+    return " ".join(text.lower().split())
 
 
 def predict(text, device):
@@ -53,11 +53,11 @@ def predict(text, device):
     """
     classification_model.to(device)
 
-    # Both callers (auto_detect_language and language_classify) depend on this
-    # rather than lowercasing independently — they previously disagreed on it,
-    # which degraded auto_detect_language's accuracy on capitalized input.
+    # Both callers (auto_detect_language and language_classify) depend on
+    # this matching training's normalization exactly, or short-text accuracy
+    # silently degrades.
     inputs = classification_tokenizer(
-        text.lower(), return_tensors="pt", truncation=True, padding=True
+        _normalize_text(text), return_tensors="pt", truncation=True, padding=True
     )
     inputs = {key: value.to(device) for key, value in inputs.items()}
     with torch.no_grad():
